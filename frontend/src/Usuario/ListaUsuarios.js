@@ -43,7 +43,7 @@ function ListaUsuarios(){
                                     <td>{usuario.nombre_usuario}</td>
                                     <td>{usuario.rol}</td>
                                     <td> <Link to={`/usuario/${usuario.id_usuario}/delete`} className="btn btn-danger">Eliminar</Link></td> 
-                                    <td> <Link to={`/usuario/actualizar/${usuario.id_usuario}`} className="btn btn-warning">Actualizar</Link></td>
+                                    <td> <Link to={`/usuario/${usuario.id_usuario}/change`} className="btn btn-warning">Actualizar</Link></td>
                                 </tr>
                             ) ) }
                         </tbody>

@@ -48,7 +48,7 @@ function EliminarUsuario(){
                 <div className="card-header">Confirme la eliminación del usuario</div>
                 <div className="card-body">
                     <h1>¿Desea eliminar a este usuario?</h1>
-                    <h2>{usuario?.nombre_usuario} (ID: {usuario?.id_usuario})</h2>
+                    <h2>{usuario?.nombre_usuario} <br/> ID: {usuario?.id_usuario} <br/> Cargo: {usuario?.rol}</h2>
                     <div className="mt-3">
                         <button type="submit" className="btn btn-danger me-2" onClick={onSubmit}>Eliminar usuario</button>
                         <button type="button" className="btn btn-secondary" onClick={() => navigate('/usuario')}>Cancelar</button>

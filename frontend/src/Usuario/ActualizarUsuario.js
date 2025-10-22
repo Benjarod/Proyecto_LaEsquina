@@ -2,29 +2,26 @@ import React, {useState, useEffect} from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
-function ActualizarCliente () {
-    const [id_cliente, setIdCliente] = useState("");
-    const [edad, setEdad] = useState("");
-    const [genero, setGenero] = useState("");
-    const [saldo, setSaldo] = useState("");
-    const [estado_actividad, setEstadoActividad] = useState("");
-    const [nivel_satisfaccion, setNivelSatisfaccion] = useState("");
+function ActualizarUsuario () {
+    const [id_usuario, setIdUsuario] = useState("");
+    const [nombre_usuario, setNombreUsuario] = useState("");
+    const [rol, setRol] = useState("");
+    const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
     let {id} = useParams();
 
-    const cargarDatosClientes = async () => {
+    const cargarDatosUsuario = async () => {
         try {
-            const response = await axios.get(`http://localhost:8000/api/clientes/${id_cliente}`);
-            const cliente = response.data[0];
-            setIdCliente(cliente.id_cliente);
-            setEdad(cliente.edad);
-            setGenero(cliente.genero);
-            setSaldo(cliente.saldo);
-            setEstadoActividad(cliente.estado_actividad);
-            setNivelSatisfaccion(cliente.nivel_satisfaccion);
+            const response = await axios.get(`http://localhost:8000/api/usuarios/${id}/`);
+            const usuario = response.data;
+            setIdUsuario(usuario.id_usuario);
+            setNombreUsuario(usuario.nombre_usuario);
+            setRol(usuario.rol);
+            setPassword(usuario.password);
         } catch (error) {
-            console.log(error)
+            console.error("Error al cargar usuario:", error);
+            setError("Error al cargar los datos del usuario");
         }
     };
 
@@ -33,7 +30,7 @@ function ActualizarCliente () {
     };
 
     useEffect(() => {
-        cargarDatosClientes();
+        cargarDatosUsuario();
     },[]);
 
     
@@ -41,26 +38,26 @@ function ActualizarCliente () {
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            const cliente = {
-                edad,
-                genero,
-                saldo,
-                estado_actividad,
-                nivel_satisfaccion
+            const usuario = {
+                nombre_usuario,
+                rol,
+                password,
             }
-            await axios.patch(`http://localhost:8000/api/clientes/${id_cliente}`,cliente);
-            navigate("/clientes")
+            await axios.patch(`http://localhost:8000/api/usuarios/${id}/`, usuario);
+            navigate("/usuario/");
         } catch (error) {
-            console.log(error)
-            if (error.response) {
-                setError("Se ha producido un error:" || error.response.statusText);
+            console.error("Error al actualizar:", error);
+            if (error.response?.data) {
+                setError("Error: " + JSON.stringify(error.response.data));
+            } else {
+                setError("Error al actualizar el usuario");
             }
         }
     }
 
     return(
         <div className="container">
-            <h1>Actualizar Cliente</h1>
+            <h1>Actualizar Usuario</h1>
             <hr></hr>
             {error && (
                 <div className="alert alert-danger" role="alert">
@@ -72,19 +69,25 @@ function ActualizarCliente () {
                 <div className="card-body">
                 <form onSubmit={onSubmit}>
                         <div className="form-group">
-                            <label>Id_Cliente</label>
-                            <input type="number" className="form-control" value={id_cliente} disabled />
-                            <label>Edad</label>
-                            <input type="number" className="form-control" value={edad} onChange={(e) => setEdad(e.target.value)} />
-                            <label>Genero</label>
-                            <input type="text" className="form-control" value={genero} onChange={(e) => setGenero(e.target.value)} />
-                            <label>Saldo</label>
-                            <input type="number" className="form-control" value={saldo} onChange={(e) => setSaldo(e.target.value)} />
-                            <label>Estado actividad</label>
-                            <input type="number" className="form-control" value={estado_actividad} onChange={(e) => setEstadoActividad(e.target.value)} />
-                            <label>Nivel de satisfaccion</label>
-                            <input type="number" className="form-control" value={nivel_satisfaccion} onChange={(e) => setNivelSatisfaccion(e.target.value)} />
-                            <button type="submit" className="btn btn-primary">Actualizar Cliente</button>
+                            <label>Id_Usuario</label>
+                            <input type="number" className="form-control" value={id_usuario} disabled />
+                            <label>Nombre Usuario</label>
+                            <input type="text" className="form-control" value={nombre_usuario} onChange={(e) => setNombreUsuario(e.target.value)} required />
+                            <label>Rol</label>
+                            <select
+                                className="form-control"
+                                value={rol}
+                                onChange={(e) => setRol(e.target.value)}
+                                required
+                            >
+                                <option value="">-- Seleccione rol --</option>
+                                <option value="Admin">Administrador</option>
+                                <option value="Bodeguero">Bodeguero</option>
+                                <option value="Cajero">Cajero</option>
+                            </select>
+                            <label>Password</label>
+                            <input type="text" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                            <button type="submit" className="btn btn-primary">Actualizar Usuario</button>
                             <button type="button" className="btn btn-secondary" onClick={volverAtras}>Cancelar</button>
                         </div>
                     </form>
@@ -93,4 +96,4 @@ function ActualizarCliente () {
         </div>
     )
 }
-export default ActualizarCliente;
+export default ActualizarUsuario;

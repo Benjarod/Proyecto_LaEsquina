@@ -4,6 +4,7 @@ import Home from './components/Home';
 import ListaUsuarios from './Usuario/ListaUsuarios';
 import CrearUsuario from './Usuario/CrearUsuario';
 import EliminarUsuario from './Usuario/EliminarUsuario';
+import ActualizarUsuario from './Usuario/ActualizarUsuario';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/usuario/" element={<ListaUsuarios/>}/>
           <Route path="/usuarios/add" element={<CrearUsuario/>} />
           <Route path="/usuario/:id/delete" element={<EliminarUsuario/>} />
+          <Route path="/usuario/:id/change" element={<ActualizarUsuario/>} />
 
         </Routes>
       </div>
