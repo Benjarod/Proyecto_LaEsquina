@@ -14,6 +14,11 @@ function TopBar(){
                                 <a className="nav-link" href="/usuario">Usuarios</a>
                             </li>
                         </ul>
+                        <ul className="navbar-nav">
+                            <li className="nav-item">
+                                <a className="nav-link" href="/proveedores">Proveedores</a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </nav>

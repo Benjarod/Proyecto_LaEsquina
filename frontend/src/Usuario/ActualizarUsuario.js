@@ -87,7 +87,7 @@ function ActualizarUsuario () {
                             </select>
                             <label>Password</label>
                             <input type="text" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                            <button type="submit" className="btn btn-primary">Actualizar Usuario</button>
+                            <button type="submit" className="btn btn-primary me-2">Actualizar Usuario</button>
                             <button type="button" className="btn btn-secondary" onClick={volverAtras}>Cancelar</button>
                         </div>
                     </form>
