@@ -3,30 +3,30 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
 
-function EliminarProveedor(){
-    const [proveedor, setProveedor] = useState([]);
+function EliminarProducto(){
+    const [producto, setProducto] = useState([]);
     const [error, setError] = useState("");
     const navigate = useNavigate();
     let {id} = useParams();
 
-    const cargarDatosProveedor = async () => {
+    const cargarDatosProducto = async () => {
         try {
-            const response = await axios.get(`http://localhost:8000/api/proveedores/${id}/`)
-            setProveedor(response.data);
+            const response = await axios.get(`http://localhost:8000/api/productos/${id}/`)
+            setProducto(response.data);
         } catch (error) {
             console.log(error)
         }
     };
 
     useEffect(() => {
-        cargarDatosProveedor();
+        cargarDatosProducto();
     }, []);
 
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.delete(`http://localhost:8000/api/proveedores/${id}/`);
-            navigate("/proveedores")
+            await axios.delete(`http://localhost:8000/api/productos/${id}/`);
+            navigate("/productos")
         } catch (error) {
             console.log(error)
             if (error.response) {
@@ -37,7 +37,7 @@ function EliminarProveedor(){
 
     return(
         <div className="container">
-            <h1>Eliminar Proveedor</h1>
+            <h1>Eliminar Producto</h1>
             <hr></hr>
             {error && (
                 <div className="alert alert-danger" role="alert">
@@ -45,17 +45,17 @@ function EliminarProveedor(){
                 </div>
             )}
             <div className="card">
-                <div className="card-header">Confirme la eliminación del proveedor</div>
+                <div className="card-header">Confirme la eliminación del producto</div>
                 <div className="card-body">
-                    <h1>¿Desea eliminar a este proveedor?</h1>
-                    <h2>{proveedor?.nombre_proveedor} <br/> ID: {proveedor?.id_proveedor}</h2>
+                    <h1>¿Desea eliminar este producto?</h1>
+                    <h2>{producto?.nombre_producto} <br/> Descripción: {producto?.descripcion}</h2>
                     <div className="mt-3">
-                        <button type="submit" className="btn btn-danger me-2" onClick={onSubmit}>Eliminar proveedor</button>
-                        <button type="button" className="btn btn-secondary" onClick={() => navigate('/proveedores')}>Cancelar</button>
+                        <button type="submit" className="btn btn-danger me-2" onClick={onSubmit}>Eliminar producto</button>
+                        <button type="button" className="btn btn-secondary" onClick={() => navigate('/productos')}>Cancelar</button>
                     </div>
                 </div>
             </div>
         </div>
     )
 }
-export default EliminarProveedor;
+export default EliminarProducto;

@@ -8,6 +8,7 @@ function CrearProducto() {
     const [sku, setSkuProducto] = useState("");
     const [nombre_producto, setNombreProducto] = useState("");
     const [descripcion, setDescripcionProducto] = useState("");
+    const [imagen, setImagenProducto] = useState(null);
     const [precio_costo, setPrecioCostoProducto] = useState("");
     const [precio_venta, setPrecioVentaProducto] = useState("");
     const [stock_actual, setStockActualProducto] = useState("");
@@ -24,22 +25,30 @@ function CrearProducto() {
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:8000/api/productos/', {
-                id_producto,
-                sku,
-                nombre_producto,
-                descripcion,
-                precio_costo,
-                precio_venta,
-                stock_actual,
-                stock_minimo,
-                id_proveedor,
+            // 👇 Usamos FormData porque hay una imagen
+            const formData = new FormData();
+            formData.append("sku", sku);
+            formData.append("nombre_producto", nombre_producto);
+            formData.append("descripcion", descripcion);
+            if (imagen) formData.append("imagen", imagen); // importante: archivo
+            formData.append("precio_costo", precio_costo);
+            formData.append("precio_venta", precio_venta);
+            formData.append("stock_actual", stock_actual);
+            formData.append("stock_minimo", stock_minimo);
+            formData.append("id_proveedor", id_proveedor);
+        
+            await axios.post("http://localhost:8000/api/productos/", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
             });
             navigate("/productos/");
         } catch (error) {
             console.error(error);
-            if (error.response) {
-                setError("Se ha producido un error:" || error.response.statusText);
+            if (error.response && error.response.data) {
+                setError("Error: " + JSON.stringify(error.response.data));
+            } else {
+                setError("Error al crear el producto");
             }
         }
     };
@@ -70,7 +79,7 @@ function CrearProducto() {
             <div className="card">
                 <div className="card-header">Complete los datos del nuevo producto</div>
                 <div className="card-body">
-                    <form onSubmit={onSubmit}>
+                    <form onSubmit={onSubmit} encType="multipart/form-data">
                         <div className="form-group">
                             <label>SKU</label>
                             <input type="text" className="form-control" value={sku} onChange={(e) => setSkuProducto(e.target.value)} required />
@@ -78,6 +87,8 @@ function CrearProducto() {
                             <input type="text" className="form-control" value={nombre_producto} onChange={(e) => setNombreProducto(e.target.value)} required />
                             <label>Descripción</label>
                             <input type="text" className="form-control" value={descripcion} onChange={(e) => setDescripcionProducto(e.target.value)} required />
+                            <label>Imagen</label>
+                            <input type="file" className="form-control" accept="image/*" onChange={(e) => setImagenProducto(e.target.files[0])} />
                             <label>Precio Costo</label>
                             <input type="number" className="form-control" value={precio_costo} onChange={(e) => setPrecioCostoProducto(e.target.value)} required />
                             <label>Precio Venta</label>

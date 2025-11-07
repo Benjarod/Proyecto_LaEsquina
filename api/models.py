@@ -1,4 +1,5 @@
 from django.db import models
+import os
 
 # Create your models here.
 class proveedor(models.Model):
@@ -35,8 +36,15 @@ class producto(models.Model):
     stock_actual = models.IntegerField()
     stock_minimo = models.IntegerField()
     id_proveedor = models.ForeignKey(proveedor, on_delete=models.CASCADE)
+    imagen = models.ImageField(upload_to='productos', null=True, blank=True)
     def __str__(self):
         return f"{self.nombre_producto} (SKU: {self.sku})"
+    
+    def delete(self, *args, **kwargs):
+        # Si el producto tiene imagen, la borramos del sistema de archivos
+        if self.imagen and os.path.isfile(self.imagen.path):
+            os.remove(self.imagen.path)
+        super().delete(*args, **kwargs)
     
 class compra(models.Model):
     id_compra = models.AutoField(primary_key=True)

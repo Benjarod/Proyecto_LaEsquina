@@ -32,6 +32,7 @@ function ListaProductos(){
                             <tr>
                                 <th>SKU</th>
                                 <th>Producto</th>
+                                <th>Imagen</th>
                                 <th>Precio Costo</th>
                                 <th>Precio Venta</th>
                                 <th>Stock Actual</th>
@@ -43,6 +44,13 @@ function ListaProductos(){
                                 <tr key={producto.id_producto}>
                                     <td>{producto.sku}</td>
                                     <td>{producto.nombre_producto}</td>
+                                    <td>
+                                        {producto.imagen ? (
+                                            <img src={producto.imagen} alt= "Nada" style={{width: "100px", height: "100px", objectFit: "cover", borderRadius: "8px",}}/>
+                                            ) : (
+                                                <span>Sin imagen</span>
+                                            )}
+                                    </td>
                                     <td>{producto.precio_costo}</td>
                                     <td>{producto.precio_venta}</td>
                                     <td>{producto.stock_actual}</td>

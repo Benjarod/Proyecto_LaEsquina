@@ -7,6 +7,7 @@ function ActualizarProducto () {
     const [sku, setSkuProducto] = useState("");
     const [nombre_producto, setNombreProducto] = useState("");
     const [descripcion, setDescripcionProducto] = useState("");
+    const [imagen, setImagenProducto] = useState(null);
     const [precio_costo, setPrecioCostoProducto] = useState("");
     const [precio_venta, setPrecioVentaProducto] = useState("");
     const [stock_actual, setStockActualProducto] = useState("");
@@ -29,12 +30,14 @@ function ActualizarProducto () {
             setPrecioVentaProducto(producto.precio_venta);
             setStockActualProducto(producto.stock_actual);
             setStockMinimoProducto(producto.stock_minimo);
+            setImagenProducto(producto.imagen || null);
             // producto.id_proveedor puede venir como id (number) o como objeto { id_proveedor: .. }
             if (producto.id_proveedor && typeof producto.id_proveedor === 'object') {
                 setIdProveedorProducto(producto.id_proveedor.id_proveedor || producto.id_proveedor.id || "");
             } else {
                 setIdProveedorProducto(producto.id_proveedor || "");
             }
+            
         } catch (error) {
             console.error("Error al cargar producto:", error);
             setError("Error al cargar los datos del producto");
@@ -64,30 +67,39 @@ function ActualizarProducto () {
 
     
 
+    // Actualizar producto
     const onSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const producto = {
-                sku,
-                nombre_producto,
-                descripcion,
-                precio_costo,
-                precio_venta,
-                stock_actual,
-                stock_minimo,
-                id_proveedor,
-            }
-            await axios.patch(`http://localhost:8000/api/productos/${id}/`, producto);
-            navigate("/productos/");
-        } catch (error) {
-            console.error("Error al actualizar:", error);
-            if (error.response?.data) {
-                setError("Error: " + JSON.stringify(error.response.data));
-            } else {
-                setError("Error al actualizar el producto");
-            }
-        }
-    }
+      e.preventDefault();
+      try {
+        const formData = new FormData();
+        formData.append("sku", sku);
+        formData.append("nombre_producto", nombre_producto);
+        formData.append("descripcion", descripcion);
+        formData.append("precio_costo", precio_costo);
+        formData.append("precio_venta", precio_venta);
+        formData.append("stock_actual", stock_actual);
+        formData.append("stock_minimo", stock_minimo);
+        formData.append("id_proveedor", id_proveedor);
+
+        if (imagen instanceof File) {
+        formData.append("imagen", imagen);
+      }
+
+        await axios.patch(`http://localhost:8000/api/productos/${id}/`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        navigate("/productos/");
+      } catch (error) {
+        console.error("Error al actualizar:", error);
+        setError(
+          error.response?.data
+            ? "Error: " + JSON.stringify(error.response.data)
+            : "Error al actualizar el producto"
+        );
+      }
+    };
+
 
     return(
         <div className="container">
@@ -132,6 +144,28 @@ function ActualizarProducto () {
                             ) : (
                                 <input type="number" className="form-control" value={id_proveedor} onChange={(e) => setIdProveedorProducto(e.target.value)} required />
                             )}
+                            <label className="mt-3">Imagen</label>
+                            {/* Mostrar imagen actual si existe */}
+                            {imagen && !(imagen instanceof File) && (
+                            <div className="mb-2">
+                                <img
+                                    src={imagen}
+                                    alt=""
+                                    style={{
+                                        width: "120px",
+                                        height: "120px",
+                                        objectFit: "cover",
+                                        borderRadius: "8px",
+                                    }}
+                                />
+                            </div>
+                            )}
+                            <input
+                                type="file"
+                                className="form-control"
+                                accept="image/*"
+                                onChange={(e) => setImagenProducto(e.target.files[0])}
+                            />
                             <button type="submit" className="btn btn-primary me-2">Actualizar Producto</button>
                             <button type="button" className="btn btn-secondary" onClick={volverAtras}>Cancelar</button>
                         </div>
