@@ -12,6 +12,10 @@ import CrearProveedor from './Proveedores/CrearProveedores';
 import ActualizarProveedor from './Proveedores/ActualizarProveedores';
 import EliminarProveedor from './Proveedores/EliminarProveedores';
 
+import ListaProductos from './Productos/ListaProductos';
+import CrearProducto from './Productos/CrearProducto';
+import ActualizarProducto from './Productos/ActualizarProducto';
+
 function App() {
   return (
     <Router>
@@ -29,6 +33,10 @@ function App() {
           <Route path="/proveedor/add" element={<CrearProveedor/>} />
           <Route path="/proveedor/:id/delete" element={<EliminarProveedor/>} />
           <Route path="/proveedor/:id/change" element={<ActualizarProveedor/>} />
+
+          <Route path='/productos/' element={<ListaProductos/>}/>
+          <Route path="/producto/add" element={<CrearProducto/>} />
+          <Route path="/producto/:id/change" element={<ActualizarProducto/>} />
         </Routes>
       </div>
     </Router>
