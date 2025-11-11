@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 function Caja() {
     const [productos, setProductos] = useState([]);
+    const [todosProductos, setTodosProductos] = useState([]);
     const [carrito, setCarrito] = useState([]);
     const [busqueda, setBusqueda] = useState("");
     const [idUsuario, setIdUsuario] = useState("");
@@ -11,6 +12,12 @@ function Caja() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
+    const [mostrarCatalogo, setMostrarCatalogo] = useState(false);
+    
+    // Estados para paginación
+    const [paginaActual, setPaginaActual] = useState(1);
+    const productosPorPagina = 10;
+    
     const navigate = useNavigate();
 
     // Cargar usuarios al montar el componente
@@ -24,6 +31,19 @@ function Caja() {
             }
         };
         fetchUsuarios();
+    }, []);
+
+    // Cargar todos los productos para el catálogo
+    useEffect(() => {
+        const fetchTodosProductos = async () => {
+            try {
+                const response = await axios.get('http://localhost:8000/api/productos/');
+                setTodosProductos(response.data);
+            } catch (error) {
+                console.error("Error al cargar productos:", error);
+            }
+        };
+        fetchTodosProductos();
     }, []);
 
     // Buscar productos
@@ -141,6 +161,10 @@ function Caja() {
             setBusqueda("");
             setProductos([]);
             
+            // Recargar productos para actualizar stock
+            const respProductos = await axios.get('http://localhost:8000/api/productos/');
+            setTodosProductos(respProductos.data);
+            
             setTimeout(() => {
                 setSuccess("");
             }, 5000);
@@ -162,6 +186,16 @@ function Caja() {
         setBusqueda("");
         setProductos([]);
         setError("");
+    };
+
+    // Lógica de paginación
+    const indiceUltimoProducto = paginaActual * productosPorPagina;
+    const indicePrimerProducto = indiceUltimoProducto - productosPorPagina;
+    const productosActuales = todosProductos.slice(indicePrimerProducto, indiceUltimoProducto);
+    const totalPaginas = Math.ceil(todosProductos.length / productosPorPagina);
+
+    const cambiarPagina = (numeroPagina) => {
+        setPaginaActual(numeroPagina);
     };
 
     return (
@@ -207,7 +241,7 @@ function Caja() {
                                 </select>
                             </div>
 
-                            <div className="input-group">
+                            <div className="input-group mb-3">
                                 <input
                                     type="text"
                                     className="form-control"
@@ -224,17 +258,25 @@ function Caja() {
                                 </button>
                             </div>
 
+                            {/* Botón para mostrar/ocultar catálogo */}
+                            <button 
+                                className="btn btn-info w-100 mb-3" 
+                                onClick={() => setMostrarCatalogo(!mostrarCatalogo)}
+                            >
+                                {mostrarCatalogo ? 'Ocultar Catálogo' : 'Ver Catálogo Completo'}
+                            </button>
+
                             {/* Resultados de búsqueda */}
                             {productos.length > 0 && (
-                                <div className="list-group mt-3" style={{maxHeight: '300px', overflowY: 'auto'}}>
+                                <div className="list-group mb-3" style={{maxHeight: '300px', overflowY: 'auto'}}>
                                     {productos.map(producto => (
                                         <button
                                             key={producto.id_producto}
                                             className="list-group-item list-group-item-action"
                                             onClick={() => agregarAlCarrito(producto)}
                                         >
-                                            <div className="d-flex justify-content-between">
-                                                <div>
+                                            <div className="d-flex justify-content-between align-items-center">
+                                                <div className="flex-grow-1">
                                                     <strong>{producto.nombre_producto}</strong>
                                                     <br />
                                                     <small className="text-muted">SKU: {producto.sku}</small>
@@ -247,6 +289,103 @@ function Caja() {
                                             </div>
                                         </button>
                                     ))}
+                                </div>
+                            )}
+
+                            {/* Catálogo completo con paginación */}
+                            {mostrarCatalogo && (
+                                <div>
+                                    <h6 className="mb-2">Catálogo de Productos</h6>
+                                    <div className="list-group" style={{maxHeight: '400px', overflowY: 'auto'}}>
+                                        {productosActuales.map(producto => (
+                                            <button
+                                                key={producto.id_producto}
+                                                className="list-group-item list-group-item-action"
+                                                onClick={() => agregarAlCarrito(producto)}
+                                                disabled={producto.stock_actual === 0}
+                                            >
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <div className="flex-grow-1">
+                                                        <div className="d-flex align-items-center">
+                                                            {producto.imagen && (
+                                                                <img 
+                                                                    src={producto.imagen} 
+                                                                    alt={producto.nombre_producto}
+                                                                    style={{
+                                                                        width: '50px', 
+                                                                        height: '50px', 
+                                                                        objectFit: 'cover',
+                                                                        borderRadius: '5px',
+                                                                        marginRight: '10px'
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            <div>
+                                                                <strong>{producto.nombre_producto}</strong>
+                                                                <br />
+                                                                <small className="text-muted">SKU: {producto.sku}</small>
+                                                                <br />
+                                                                <small className={producto.stock_actual <= producto.stock_minimo ? 'text-danger' : 'text-muted'}>
+                                                                    Stock: {producto.stock_actual}
+                                                                    {producto.stock_actual === 0 && ' (Agotado)'}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-end">
+                                                        <strong className="text-success">${producto.precio_venta}</strong>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Paginación */}
+                                    {totalPaginas > 1 && (
+                                        <nav className="mt-3">
+                                            <ul className="pagination pagination-sm justify-content-center">
+                                                <li className={`page-item ${paginaActual === 1 ? 'disabled' : ''}`}>
+                                                    <button 
+                                                        className="page-link" 
+                                                        onClick={() => cambiarPagina(paginaActual - 1)}
+                                                        disabled={paginaActual === 1}
+                                                    >
+                                                        Anterior
+                                                    </button>
+                                                </li>
+                                                
+                                                {[...Array(totalPaginas)].map((_, index) => (
+                                                    <li 
+                                                        key={index + 1} 
+                                                        className={`page-item ${paginaActual === index + 1 ? 'active' : ''}`}
+                                                    >
+                                                        <button 
+                                                            className="page-link" 
+                                                            onClick={() => cambiarPagina(index + 1)}
+                                                        >
+                                                            {index + 1}
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                                
+                                                <li className={`page-item ${paginaActual === totalPaginas ? 'disabled' : ''}`}>
+                                                    <button 
+                                                        className="page-link" 
+                                                        onClick={() => cambiarPagina(paginaActual + 1)}
+                                                        disabled={paginaActual === totalPaginas}
+                                                    >
+                                                        Siguiente
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </nav>
+                                    )}
+
+                                    <div className="text-center mt-2">
+                                        <small className="text-muted">
+                                            Mostrando {indicePrimerProducto + 1} - {Math.min(indiceUltimoProducto, todosProductos.length)} de {todosProductos.length} productos
+                                        </small>
+                                    </div>
                                 </div>
                             )}
                         </div>
