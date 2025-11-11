@@ -5,7 +5,7 @@
     <h2>2. Instalación BackEnd</h2>
     <p>Pasos para instalar el proyecto localmente:</p>
     <pre><code># Se clona el repositorio y se ingresa a la carpeta
-    git clone https://github.com/Benjarod/Proyecto_LaEsquina.git
+    git clone https://github.com/Benjarod/(urlProyecto)
     cd Proyecto_LaEsquina
   </code></pre>
   <hr/>
