@@ -14,7 +14,7 @@ class usuario(models.Model):
     id_usuario = models.AutoField(primary_key=True)
     nombre_usuario = models.CharField(max_length=100)
     password = models.CharField(max_length=100)
-    ### Elecciones ara campo 'rol'
+    ### Elecciones para campo 'rol'
     class Rol(models.TextChoices):
         ADMINISTRADOR = 'Admin'
         BODEGUERO ='Bodeguero'
