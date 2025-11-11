@@ -13,6 +13,8 @@ function Caja() {
     const [success, setSuccess] = useState("");
     const [loading, setLoading] = useState(false);
     const [mostrarCatalogo, setMostrarCatalogo] = useState(false);
+    const [mostrarModalPago, setMostrarModalPago] = useState(false);
+    const [metodoPago, setMetodoPago] = useState("");
     
     // Estados para paginación
     const [paginaActual, setPaginaActual] = useState(1);
@@ -127,8 +129,8 @@ function Caja() {
         );
     };
 
-    // Procesar venta
-    const procesarVenta = async () => {
+    // Abrir modal de pago
+    const abrirModalPago = () => {
         if (!idUsuario) {
             setError("Debe seleccionar un usuario");
             return;
@@ -139,8 +141,19 @@ function Caja() {
             return;
         }
 
+        setMostrarModalPago(true);
+    };
+
+    // Procesar venta con método de pago
+    const procesarVentaConPago = async () => {
+        if (!metodoPago) {
+            setError("Debe seleccionar un método de pago");
+            return;
+        }
+
         setLoading(true);
         setError("");
+        setMostrarModalPago(false);
 
         try {
             const items = carrito.map(item => ({
@@ -152,14 +165,33 @@ function Caja() {
                 'http://localhost:8000/api/ventas/procesar_venta/',
                 {
                     id_usuario: idUsuario,
+                    metodo_pago: metodoPago,
                     items: items
                 }
             );
 
-            setSuccess(`¡Venta procesada exitosamente! Total: $${response.data.total}`);
+            const idVenta = response.data.id_venta;
+
+            // Descargar boleta PDF
+            const pdfResponse = await axios.get(
+                `http://localhost:8000/api/ventas/${idVenta}/generar_boleta/`,
+                { responseType: 'blob' }
+            );
+
+            // Crear enlace de descarga
+            const url = window.URL.createObjectURL(new Blob([pdfResponse.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `boleta_${idVenta}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            setSuccess(`¡Venta procesada exitosamente! Total: $${response.data.total}. Boleta descargada.`);
             setCarrito([]);
             setBusqueda("");
             setProductos([]);
+            setMetodoPago("");
             
             // Recargar productos para actualizar stock
             const respProductos = await axios.get('http://localhost:8000/api/productos/');
@@ -214,6 +246,63 @@ function Caja() {
                 <div className="alert alert-success alert-dismissible fade show" role="alert">
                     {success}
                     <button type="button" className="btn-close" onClick={() => setSuccess("")}></button>
+                </div>
+            )}
+
+            {/* Modal de método de pago */}
+            {mostrarModalPago && (
+                <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">Seleccione Método de Pago</h5>
+                                <button 
+                                    type="button" 
+                                    className="btn-close" 
+                                    onClick={() => setMostrarModalPago(false)}
+                                ></button>
+                            </div>
+                            <div className="modal-body">
+                                <div className="d-grid gap-3">
+                                    <button 
+                                        className={`btn btn-lg ${metodoPago === 'Efectivo' ? 'btn-success' : 'btn-outline-success'}`}
+                                        onClick={() => setMetodoPago('Efectivo')}
+                                    >
+                                        💵 Efectivo
+                                    </button>
+                                    <button 
+                                        className={`btn btn-lg ${metodoPago === 'Debito' ? 'btn-primary' : 'btn-outline-primary'}`}
+                                        onClick={() => setMetodoPago('Debito')}
+                                    >
+                                        💳 Débito
+                                    </button>
+                                </div>
+                                <div className="mt-4 text-center">
+                                    <h4>Total a pagar: <span className="text-success">${calcularTotal().toFixed(2)}</span></h4>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button 
+                                    type="button" 
+                                    className="btn btn-secondary" 
+                                    onClick={() => {
+                                        setMostrarModalPago(false);
+                                        setMetodoPago("");
+                                    }}
+                                >
+                                    Cancelar
+                                </button>
+                                <button 
+                                    type="button" 
+                                    className="btn btn-success" 
+                                    onClick={procesarVentaConPago}
+                                    disabled={!metodoPago}
+                                >
+                                    Confirmar y Generar Boleta
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -463,7 +552,7 @@ function Caja() {
                                     <div className="d-grid gap-2">
                                         <button
                                             className="btn btn-success btn-lg"
-                                            onClick={procesarVenta}
+                                            onClick={abrirModalPago}
                                             disabled={loading}
                                         >
                                             {loading ? 'Procesando...' : 'Procesar Venta'}

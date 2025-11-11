@@ -60,6 +60,12 @@ class venta(models.Model):
     fecha_hora = models.DateTimeField(auto_now_add=True)
     total_venta = models.FloatField()
     id_usuario = models.ForeignKey(usuario, on_delete=models.CASCADE)
+    # Nuevo campo para método de pago
+    class MetodoPago(models.TextChoices):
+        EFECTIVO = 'Efectivo'
+        DEBITO = 'Debito'
+    
+    metodo_pago = models.CharField(max_length=20, choices=MetodoPago.choices, default='Efectivo')
     def __str__(self):
         return f"Venta {self.id_venta} - Total: {self.total_venta}"
 
