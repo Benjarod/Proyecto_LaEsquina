@@ -17,6 +17,10 @@ import CrearProducto from './Productos/CrearProducto';
 import ActualizarProducto from './Productos/ActualizarProducto';
 import EliminarProducto from './Productos/EliminarProducto';
 
+import ListaVentas from './Ventas/ListaVentas';
+
+import Caja from './Caja/caja';
+
 function App() {
   return (
     <Router>
@@ -39,6 +43,10 @@ function App() {
           <Route path="/producto/add" element={<CrearProducto/>} />
           <Route path="/producto/:id/delete" element={<EliminarProducto/>} />
           <Route path="/producto/:id/change" element={<ActualizarProducto/>} />
+
+          <Route path='/ventas/' element={<ListaVentas/>}/>
+
+          <Route path="/caja/" element={<Caja/>} />
         </Routes>
       </div>
     </Router>

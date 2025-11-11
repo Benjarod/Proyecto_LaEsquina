@@ -24,6 +24,16 @@ function TopBar(){
                                 <a className="nav-link" href="/productos">Productos</a>
                             </li>
                         </ul>
+                        <ul className="navbar-nav">
+                            <li className="nav-item">
+                                <a className="nav-link" href="/ventas">Ventas</a>
+                            </li>
+                        </ul>
+                        <ul className="navbar-nav">
+                            <li className="nav-item">
+                                <a className="nav-link" href="/caja">Caja</a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
             </nav>
