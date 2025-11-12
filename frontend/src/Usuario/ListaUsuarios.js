@@ -8,7 +8,7 @@ function ListaUsuarios(){
     useEffect(() => {
         const fetchUsuarios = async () => {
             try {
-                const response = await axiosInstance.get('http://127.0.0.1:8000/api/usuarios/');
+                const response = await axiosInstance.get('usuarios/');
                 setUsuarios(response.data);
             } catch (error) {
                 console.log(error);

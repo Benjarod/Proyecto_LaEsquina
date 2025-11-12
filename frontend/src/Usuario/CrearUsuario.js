@@ -3,7 +3,6 @@ import axiosInstance from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
 
 function CrearUsuario() {
-    const [id_usuario, setIdUsuario] = useState("");
     const [username, setNombreUsuario] = useState("");
     const [rol, setRol] = useState("");
     const [password, setPassword] = useState("");
@@ -17,17 +16,18 @@ function CrearUsuario() {
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axiosInstance.post('http://localhost:8000/api/usuarios/', {
-                id_usuario,
-                username,
-                rol,
-                password
+            await axiosInstance.post('usuarios/', {
+                username: username,
+                rol: rol,
+                password: password,
             });
             navigate("/usuario/");
         } catch (error) {
             console.error(error);
             if (error.response) {
-                setError("Se ha producido un error:" || error.response.statusText);
+                setError("Se ha producido un error: " + (JSON.stringify(error.response.data) || error.response.statusText));
+            } else {
+                setError("Se ha producido un error al conectar con el servidor.");
             }
         }
     };

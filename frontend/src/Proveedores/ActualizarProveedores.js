@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import { useParams, useNavigate } from "react-router-dom";
 
 function ActualizarProveedor () {
@@ -13,7 +13,7 @@ function ActualizarProveedor () {
 
     const cargarDatosProveedor = async () => {
         try {
-            const response = await axios.get(`http://localhost:8000/api/proveedores/${id}/`);
+            const response = await axiosInstance.get(`proveedores/${id}/`);
             const proveedor = response.data;
             setIdProveedor(proveedor.id_proveedor);
             setRutProveedor(proveedor.rut);
@@ -43,7 +43,7 @@ function ActualizarProveedor () {
                 nombre_proveedor,
                 contacto,
             }
-            await axios.patch(`http://localhost:8000/api/proveedores/${id}/`, proveedor);
+            await axiosInstance.patch(`proveedores/${id}/`, proveedor);
             navigate("/proveedores/");
         } catch (error) {
             console.error("Error al actualizar:", error);

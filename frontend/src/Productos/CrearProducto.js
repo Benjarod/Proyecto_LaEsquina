@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
@@ -37,7 +37,7 @@ function CrearProducto() {
             formData.append("stock_minimo", stock_minimo);
             formData.append("id_proveedor", id_proveedor);
         
-            await axios.post("http://localhost:8000/api/productos/", formData, {
+            await axiosInstance.post("productos/", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -57,7 +57,7 @@ function CrearProducto() {
     useEffect(() => {
         const fetchProveedores = async () => {
             try {
-                const resp = await axios.get('http://localhost:8000/api/proveedores/');
+                const resp = await axiosInstance.get('proveedores/');
                 setProveedores(resp.data);
             } catch (err) {
                 console.error('Error cargando proveedores:', err);

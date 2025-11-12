@@ -13,7 +13,7 @@ function ActualizarUsuario () {
 
     const cargarDatosUsuario = async () => {
         try {
-            const response = await axiosInstance.get(`http://localhost:8000/api/usuarios/${id}/`);
+            const response = await axiosInstance.get(`usuarios/${id}/`);
             const usuario = response.data;
             setIdUsuario(usuario.id);
             setNombreUsuario(usuario.username);
@@ -87,7 +87,7 @@ function ActualizarUsuario () {
                                 <option value="Cajero">Cajero</option>
                             </select>
                             <label>Nueva Contraseña</label>
-                            <input type="password" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Dejar en blanco para no cambiar" required />
+                            <input type="password" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Dejar en blanco para no cambiar" />
                             <button type="submit" className="btn btn-primary me-2">Actualizar Usuario</button>
                             <button type="button" className="btn btn-secondary" onClick={volverAtras}>Cancelar</button>
                         </div>

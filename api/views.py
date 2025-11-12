@@ -187,7 +187,7 @@ class VentaViewSet(viewsets.ModelViewSet):
             info_data = [
                 f"<b>Boleta N°:</b> {venta_obj.id_venta}",
                 f"<b>Fecha:</b> {fecha_formateada}",
-                f"<b>Cajero:</b> {venta_obj.id_usuario.nombre_usuario}",
+                f"<b>Cajero:</b> {venta_obj.id_usuario.username}",
                 f"<b>Método de Pago:</b> {venta_obj.metodo_pago}",
             ]
             

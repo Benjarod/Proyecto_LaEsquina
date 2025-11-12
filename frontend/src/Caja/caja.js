@@ -28,7 +28,7 @@ function Caja() {
     useEffect(() => {
         const fetchTodosProductos = async () => {
             try {
-                const response = await axiosInstance.get('http://localhost:8000/api/productos/');
+                const response = await axiosInstance.get('productos/');
                 setTodosProductos(response.data);
             } catch (error) {
                 console.error("Error al cargar productos:", error);
@@ -46,7 +46,7 @@ function Caja() {
         
         try {
             const response = await axiosInstance.get(
-                `http://localhost:8000/api/productos/buscar/?q=${busqueda}`
+                `productos/buscar/?q=${busqueda}`
             );
             setProductos(response.data);
         } catch (error) {
@@ -147,7 +147,7 @@ function Caja() {
             }));
 
             const response = await axiosInstance.post(
-                'http://localhost:8000/api/ventas/procesar_venta/',
+                'ventas/procesar_venta/',
                 {
                     metodo_pago: metodoPago,
                     items: items
@@ -158,7 +158,7 @@ function Caja() {
 
             // Descargar boleta PDF
             const pdfResponse = await axiosInstance.get(
-                `http://localhost:8000/api/ventas/${idVenta}/generar_boleta/`,
+                `ventas/${idVenta}/generar_boleta/`,
                 { responseType: 'blob' }
             );
 
@@ -178,7 +178,7 @@ function Caja() {
             setMetodoPago("");
             
             // Recargar productos para actualizar stock
-            const respProductos = await axiosInstance.get('http://localhost:8000/api/productos/');
+            const respProductos = await axiosInstance.get('productos/');
             setTodosProductos(respProductos.data);
             
             setTimeout(() => {

@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import { useParams, useNavigate } from "react-router-dom";
 
 function ActualizarProducto () {
@@ -20,7 +20,7 @@ function ActualizarProducto () {
 
     const cargarDatosProductos = async () => {
         try {
-            const response = await axios.get(`http://localhost:8000/api/productos/${id}/`);
+            const response = await axiosInstance.get(`productos/${id}/`);
             const producto = response.data;
             setIdProducto(producto.id_producto);
             setSkuProducto(producto.sku);
@@ -56,7 +56,7 @@ function ActualizarProducto () {
     useEffect(() => {
         const fetchProveedores = async () => {
             try {
-                const resp = await axios.get('http://localhost:8000/api/proveedores/');
+                const resp = await axiosInstance.get('proveedores/');
                 setProveedores(resp.data);
             } catch (err) {
                 console.error('Error cargando proveedores:', err);
@@ -85,7 +85,7 @@ function ActualizarProducto () {
         formData.append("imagen", imagen);
       }
 
-        await axios.patch(`http://localhost:8000/api/productos/${id}/`, formData, {
+        await axiosInstance.patch(`productos/${id}/`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
 

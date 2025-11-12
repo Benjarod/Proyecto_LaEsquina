@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import { useParams, useNavigate } from "react-router-dom";
 
 
@@ -11,7 +11,7 @@ function EliminarProveedor(){
 
     const cargarDatosProveedor = async () => {
         try {
-            const response = await axios.get(`http://localhost:8000/api/proveedores/${id}/`)
+            const response = await axiosInstance.get(`proveedores/${id}/`)
             setProveedor(response.data);
         } catch (error) {
             console.log(error)
@@ -25,7 +25,7 @@ function EliminarProveedor(){
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.delete(`http://localhost:8000/api/proveedores/${id}/`);
+            await axiosInstance.delete(`proveedores/${id}/`);
             navigate("/proveedores")
         } catch (error) {
             console.log(error)

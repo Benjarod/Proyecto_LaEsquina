@@ -11,7 +11,7 @@ function EliminarUsuario(){
 
     const cargarDatosUsuario = async () => {
         try {
-            const response = await axiosInstance.get(`http://localhost:8000/api/usuarios/${id}/`)
+            const response = await axiosInstance.get(`usuarios/${id}/`)
             setUsuario(response.data);
         } catch (error) {
             console.log(error)
@@ -25,7 +25,7 @@ function EliminarUsuario(){
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axiosInstance.delete(`http://localhost:8000/api/usuarios/${id}/`);
+            await axiosInstance.delete(`usuarios/${id}/`);
             navigate("/usuario")
         } catch (error) {
             console.log(error)

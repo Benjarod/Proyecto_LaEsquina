@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import { useParams, useNavigate } from "react-router-dom";
 
 
@@ -11,7 +11,7 @@ function EliminarProducto(){
 
     const cargarDatosProducto = async () => {
         try {
-            const response = await axios.get(`http://localhost:8000/api/productos/${id}/`)
+            const response = await axiosInstance.get(`productos/${id}/`)
             setProducto(response.data);
         } catch (error) {
             console.log(error)
@@ -25,7 +25,7 @@ function EliminarProducto(){
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.delete(`http://localhost:8000/api/productos/${id}/`);
+            await axiosInstance.delete(`productos/${id}/`);
             navigate("/productos")
         } catch (error) {
             console.log(error)
