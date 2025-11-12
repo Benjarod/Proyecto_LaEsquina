@@ -1,44 +1,32 @@
+# api/urls.py
 from django.urls import path, include
 from rest_framework import routers  
 from api import views
+# Importar vistas de SimpleJWT y nuestro serializer custom
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+from .serializer import CustomTokenObtainPairSerializer # <-- Importar
+
+# Vista custom para obtener token
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 router = routers.DefaultRouter()
 router.register(r'proveedores', views.ProveedorViewSet)
-urlpatterns = [
-    path('', include(router.urls)),
-]
-
 router.register(r'usuarios', views.UsuarioViewSet)
-urlpatterns = [
-    path('', include(router.urls)),
-]
-
 router.register(r'productos', views.ProductoViewSet)
-urlpatterns = [
-    path('', include(router.urls)),
-]
-
 router.register(r'compras', views.CompraViewSet)
-urlpatterns = [
-    path('', include(router.urls)),
-]
-
 router.register(r'ventas', views.VentaViewSet)
-urlpatterns = [
-    path('', include(router.urls)),
-]
+router.register(r'detalle_compras', views.DetalleCompraViewSet) # Corregido (sin espacio)
+router.register(r'detalle_ventas', views.DetalleVentaViewSet) # Corregido (sin espacio)
+router.register(r'ajuste_stock', views.AjusteStockViewSet) # Corregido (sin espacio)
 
-router.register(r'detalle compras', views.DetalleCompraViewSet)
 urlpatterns = [
     path('', include(router.urls)),
-]
 
-router.register(r'detalle ventas', views.DetalleVentaViewSet)
-urlpatterns = [
-    path('', include(router.urls)),
-]
-
-router.register(r'Ajuste Stock', views.AjusteStockViewSet)
-urlpatterns = [
-    path('', include(router.urls)),
+    # Endpoints de Autenticación JWT
+    path('token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]

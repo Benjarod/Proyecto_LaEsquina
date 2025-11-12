@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
 
 function CrearUsuario() {
     const [id_usuario, setIdUsuario] = useState("");
-    const [nombre_usuario, setNombreUsuario] = useState("");
+    const [username, setNombreUsuario] = useState("");
     const [rol, setRol] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -17,9 +17,9 @@ function CrearUsuario() {
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:8000/api/usuarios/', {
+            await axiosInstance.post('http://localhost:8000/api/usuarios/', {
                 id_usuario,
-                nombre_usuario,
+                username,
                 rol,
                 password
             });
@@ -47,7 +47,7 @@ function CrearUsuario() {
                     <form onSubmit={onSubmit}>
                         <div className="form-group">
                             <label>Nombre Usuario</label>
-                            <input type="text" className="form-control" value={nombre_usuario} onChange={(e) => setNombreUsuario(e.target.value)} required />
+                            <input type="text" className="form-control" value={username} onChange={(e) => setNombreUsuario(e.target.value)} required />
                             <label>Rol</label>
                             <select
                                 className="form-control"

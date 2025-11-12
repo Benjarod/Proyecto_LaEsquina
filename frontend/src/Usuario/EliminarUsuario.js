@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import { useParams, useNavigate } from "react-router-dom";
 
 
@@ -11,7 +11,7 @@ function EliminarUsuario(){
 
     const cargarDatosUsuario = async () => {
         try {
-            const response = await axios.get(`http://localhost:8000/api/usuarios/${id}/`)
+            const response = await axiosInstance.get(`http://localhost:8000/api/usuarios/${id}/`)
             setUsuario(response.data);
         } catch (error) {
             console.log(error)
@@ -25,7 +25,7 @@ function EliminarUsuario(){
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.delete(`http://localhost:8000/api/usuarios/${id}/`);
+            await axiosInstance.delete(`http://localhost:8000/api/usuarios/${id}/`);
             navigate("/usuario")
         } catch (error) {
             console.log(error)
@@ -48,7 +48,7 @@ function EliminarUsuario(){
                 <div className="card-header">Confirme la eliminación del usuario</div>
                 <div className="card-body">
                     <h1>¿Desea eliminar a este usuario?</h1>
-                    <h2>{usuario?.nombre_usuario} <br/> ID: {usuario?.id_usuario} <br/> Cargo: {usuario?.rol}</h2>
+                    <h2>{usuario?.username} <br/> ID: {usuario?.id} <br/> Cargo: {usuario?.rol}</h2>
                     <div className="mt-3">
                         <button type="submit" className="btn btn-danger me-2" onClick={onSubmit}>Eliminar usuario</button>
                         <button type="button" className="btn btn-secondary" onClick={() => navigate('/usuario')}>Cancelar</button>

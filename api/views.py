@@ -5,6 +5,10 @@ from .models import proveedor,usuario, producto, compra, venta, detalle_compra, 
 from django.db import transaction
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from rest_framework.permissions import IsAuthenticated
+from .permissions import IsAdmin, IsBodeguero, IsCajero
+
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.pagesizes import letter
@@ -20,14 +24,18 @@ from datetime import datetime
 class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = proveedor.objects.all()
     serializer_class = ProveedorSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = usuario.objects.all()
     serializer_class = UsuarioSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = producto.objects.all()
     serializer_class = ProductoSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
+
     @action(detail=False, methods=['get'])
     def buscar(self, request):
         """Buscar productos por SKU o nombre"""
@@ -45,32 +53,26 @@ class ProductoViewSet(viewsets.ModelViewSet):
 class CompraViewSet(viewsets.ModelViewSet):
     queryset = compra.objects.all()
     serializer_class = CompraSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
 
 class VentaViewSet(viewsets.ModelViewSet):
     queryset = venta.objects.all()
     serializer_class = VentaSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsCajero]
+
     
     @action(detail=False, methods=['post'])
     def procesar_venta(self, request):
         try:
             with transaction.atomic():
-                id_usuario = request.data.get('id_usuario')
+                user = request.user
                 metodo_pago = request.data.get('metodo_pago', 'Efectivo')
                 items = request.data.get('items', [])
                 
-                if not id_usuario or not items:
+                if not items:
                     return Response(
                         {'error': 'Faltan datos requeridos'},
                         status=status.HTTP_400_BAD_REQUEST
-                    )
-                
-                # Obtener usuario
-                try:
-                    user = usuario.objects.get(id_usuario=id_usuario)
-                except usuario.DoesNotExist:
-                    return Response(
-                        {'error': 'Usuario no encontrado'},
-                        status=status.HTTP_404_NOT_FOUND
                     )
                 
                 # Calcular total y validar stock
@@ -280,12 +282,15 @@ class VentaViewSet(viewsets.ModelViewSet):
 class DetalleCompraViewSet(viewsets.ModelViewSet):
     queryset = detalle_compra.objects.all()
     serializer_class = DetalleCompraSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
 
 class DetalleVentaViewSet(viewsets.ModelViewSet):
     queryset = detalle_venta.objects.all()
     serializer_class = DetalleVentaSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsCajero]
 
 class AjusteStockViewSet(viewsets.ModelViewSet):
     queryset = ajuste_stock.objects.all()
     serializer_class = AjusteStockSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
 
