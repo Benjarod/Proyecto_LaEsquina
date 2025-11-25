@@ -97,7 +97,7 @@ function CrearProducto() {
                             <input type="number" className="form-control" value={stock_actual} onChange={(e) => setStockActualProducto(e.target.value)} required />
                             <label>Stock Mínimo</label>
                             <input type="number" className="form-control" value={stock_minimo} onChange={(e) => setStockMinimoProducto(e.target.value)} required />
-                            <label>ID Proveedor</label>
+                            <label>Proveedor</label>
                             {proveedores.length > 0 ? (
                                 <select className="form-control" value={id_proveedor} onChange={(e) => setIdProveedorProducto(e.target.value)} required>
                                     <option value="" className="">-- Seleccione proveedor --</option>

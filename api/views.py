@@ -18,7 +18,11 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime,timedelta
+
+from django.db.models import Sum, F, Count
+from django.utils import timezone
+from rest_framework.views import APIView
 
 # Create your views here.
 class ProveedorViewSet(viewsets.ModelViewSet):
@@ -34,7 +38,7 @@ class UsuarioViewSet(viewsets.ModelViewSet):
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = producto.objects.all()
     serializer_class = ProductoSerializer
-    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero | IsCajero]
 
     @action(detail=False, methods=['get'])
     def buscar(self, request):
@@ -294,3 +298,39 @@ class AjusteStockViewSet(viewsets.ModelViewSet):
     serializer_class = AjusteStockSerializer
     permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
 
+class DashboardView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        hoy = timezone.now()
+        inicio_mes = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # 1. Ingresos totales del mes actual
+        ingresos_mes = venta.objects.filter(fecha_hora__gte=inicio_mes).aggregate(total=Sum('total_venta'))['total'] or 0
+        
+        # 2. Cantidad de ventas hoy
+        inicio_dia = hoy.replace(hour=0, minute=0, second=0, microsecond=0)
+        ventas_hoy = venta.objects.filter(fecha_hora__gte=inicio_dia).count()
+
+        ingresos_hoy = venta.objects.filter(fecha_hora__gte=inicio_dia).aggregate(total=Sum('total_venta'))['total'] or 0
+
+        # 3. Productos más vendidos (Top 5 histórico)
+        # Usamos detalle_venta para sumar las cantidades por producto
+        productos_mas_vendidos = detalle_venta.objects.values('id_producto__nombre_producto') \
+            .annotate(total_vendido=Sum('cantidad')) \
+            .order_by('-total_vendido')[:5]
+
+        # 4. Productos con stock crítico (Stock actual <= Stock mínimo)
+        productos_bajo_stock = producto.objects.filter(stock_actual__lte=F('stock_minimo')).values(
+            'nombre_producto', 'stock_actual', 'stock_minimo'
+        )
+
+        data = {
+            'ingresos_mes': ingresos_mes,
+            'ventas_hoy': ventas_hoy,
+            'productos_top': list(productos_mas_vendidos),
+            'alertas_stock': list(productos_bajo_stock),
+            'ingresos_hoy': ingresos_hoy
+        }
+
+        return Response(data)

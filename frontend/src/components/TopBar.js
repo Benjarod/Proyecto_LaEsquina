@@ -26,6 +26,9 @@ function TopBar(){
                             {(user.rol === ROLES.Admin) && (
                                 <>
                                     <li className="nav-item">
+                                        <a className="nav-link" href="/dashboard">Dashboard</a>
+                                    </li>
+                                    <li className="nav-item">
                                         <a className="nav-link" href="/usuario">Usuarios</a>
                                     </li>
                                     <li className="nav-item">

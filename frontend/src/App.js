@@ -7,6 +7,7 @@ import TopBar from './components/TopBar';
 import Home from './components/Home';
 import ProtectedRoute from './components/ProtectedRoute'; // Importar ProtectedRoute
 import LoginPage from './Login/LoginPage'; // Importar LoginPage
+import Dashboard from './components/Dashboard';
 
 // ... (imports de las otras vistas)
 import ListaUsuarios from './Usuario/ListaUsuarios';
@@ -74,6 +75,7 @@ function AppContent() {
         <Route path="/proveedor/add" element={<ProtectedRoute element={<CrearProveedor />} roles={[ROLES.Admin]} />} />
         <Route path="/proveedor/:id/delete" element={<ProtectedRoute element={<EliminarProveedor />} roles={[ROLES.Admin]} />} />
         <Route path="/proveedor/:id/change" element={<ProtectedRoute element={<ActualizarProveedor />} roles={[ROLES.Admin]} />} />
+        <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} roles={[ROLES.Admin]} />} />
 
         {/* --- Rutas de Bodeguero --- */}
         <Route path='/productos/' element={<ProtectedRoute element={<ListaProductos />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
