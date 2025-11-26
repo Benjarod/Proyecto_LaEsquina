@@ -48,7 +48,6 @@ function ListaCompras() {
                                     <tr>
                                         <th># ID</th>
                                         <th>Fecha</th>
-                                        <th>Proveedor</th>
                                         <th>Registrado por</th>
                                         <th className="text-end">Total Compra</th>
                                         <th className="text-center">Acciones</th>
@@ -59,10 +58,6 @@ function ListaCompras() {
                                         <tr key={compra.id_compra}>
                                             <td><strong>{compra.id_compra}</strong></td>
                                             <td>{formatDate(compra.fecha_hora)}</td>
-                                            <td>
-                                                {compra.nombre_proveedor} <br/>
-                                                <small className="text-muted">{compra.rut_proveedor}</small>
-                                            </td>
                                             <td><span className="badge bg-secondary">{compra.nombre_usuario}</span></td>
                                             <td className="text-end fw-bold text-success">{formatCurrency(compra.total_compra)}</td>
                                             <td className="text-center">
@@ -97,7 +92,6 @@ function ListaCompras() {
                             <div className="modal-body">
                                 <div className="row mb-3">
                                     <div className="col-6">
-                                        <p><strong>Proveedor:</strong> {compraSeleccionada.nombre_proveedor}</p>
                                         <p><strong>Fecha:</strong> {formatDate(compraSeleccionada.fecha_hora)}</p>
                                     </div>
                                     <div className="col-6 text-end">
