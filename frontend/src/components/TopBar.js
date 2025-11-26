@@ -39,9 +39,14 @@ function TopBar(){
                             
                             {/* --- Links de Admin y Bodeguero --- */}
                             {(user.rol === ROLES.Admin || user.rol === ROLES.Bodeguero) && (
-                                <li className="nav-item">
-                                    <a className="nav-link" href="/productos">Productos</a>
-                                </li>
+                                <>
+                                    <li className="nav-item">
+                                        <a className="nav-link" href="/productos">Productos</a>
+                                    </li>
+                                    <li className="nav-item">
+                                        <a className="nav-link" href="/compras">Compras</a>
+                                    </li>
+                                </>
                             )}
 
                             {/* --- Links de Admin y Cajero --- */}

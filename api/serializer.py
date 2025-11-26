@@ -59,14 +59,21 @@ class ProductoSerializer(serializers.ModelSerializer):
         model = producto
         fields = '__all__'
 
-class CompraSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = compra
-        fields = '__all__'
-
 class DetalleCompraSerializer(serializers.ModelSerializer):
+    producto = serializers.CharField(source='id_producto.nombre_producto', read_only=True)
+    sku = serializers.CharField(source='id_producto.sku', read_only=True)
     class Meta:
         model = detalle_compra
+        fields = '__all__'
+
+class CompraSerializer(serializers.ModelSerializer):
+    nombre_proveedor = serializers.CharField(source='id_proveedor.nombre_proveedor', read_only=True)
+    nombre_usuario = serializers.CharField(source='id_usuario.username', read_only=True)
+    rut_proveedor = serializers.CharField(source='id_proveedor.rut', read_only=True)
+
+    detalles = DetalleCompraSerializer(source='detalle_compra_set', many=True, read_only=True)
+    class Meta:
+        model = compra
         fields = '__all__'
 
 class DetalleVentaSerializer(serializers.ModelSerializer):

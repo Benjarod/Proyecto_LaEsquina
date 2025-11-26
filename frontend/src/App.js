@@ -25,6 +25,9 @@ import CrearProducto from './Productos/CrearProducto';
 import ActualizarProducto from './Productos/ActualizarProducto';
 import EliminarProducto from './Productos/EliminarProducto';
 
+import ListaCompras from './Compras/ListaCompras';
+import IngresarCompra from './Compras/IngresarCompra';
+
 import ListaVentas from './Ventas/ListaVentas';
 import Caja from './Caja/caja';
 
@@ -82,6 +85,8 @@ function AppContent() {
         <Route path="/producto/add" element={<ProtectedRoute element={<CrearProducto />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
         <Route path="/producto/:id/delete" element={<ProtectedRoute element={<EliminarProducto />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
         <Route path="/producto/:id/change" element={<ProtectedRoute element={<ActualizarProducto />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
+        <Route path="/ingresar-compra" element={<ProtectedRoute element={<IngresarCompra />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
+        <Route path="/compras" element={<ProtectedRoute element={<ListaCompras />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
 
         {/* --- Rutas de Cajero --- */}
         <Route path='/ventas/' element={<ProtectedRoute element={<ListaVentas />} roles={[ROLES.Admin, ROLES.Cajero]} />} />

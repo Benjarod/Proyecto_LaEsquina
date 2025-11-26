@@ -28,7 +28,7 @@ from rest_framework.views import APIView
 class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = proveedor.objects.all()
     serializer_class = ProveedorSerializer
-    permission_classes = [IsAuthenticated, IsAdmin]
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = usuario.objects.all()
@@ -57,7 +57,81 @@ class ProductoViewSet(viewsets.ModelViewSet):
 class CompraViewSet(viewsets.ModelViewSet):
     queryset = compra.objects.all()
     serializer_class = CompraSerializer
-    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero] 
+
+    @action(detail=False, methods=['post'])
+    def procesar_compra(self, request):
+        try:
+            with transaction.atomic():
+                user = request.user
+                items = request.data.get('items', []) # Solo recibimos items, no proveedor global
+                
+                if not items:
+                    return Response({'error': 'No hay productos en la lista'}, status=status.HTTP_400_BAD_REQUEST)
+
+                # --- PASO 1: Agrupar productos por su ID de Proveedor ---
+                # Estructura final: { id_proveedor_1: [itemA, itemB], id_proveedor_2: [itemC] }
+                grupos_por_proveedor = {}
+                
+                for item in items:
+                    prod_id = item['id_producto']
+                    try:
+                        prod_obj = producto.objects.get(id_producto=prod_id)
+                    except producto.DoesNotExist:
+                        raise Exception(f"Producto ID {prod_id} no encontrado")
+                    
+                    # Obtenemos el proveedor asociado a este producto
+                    prov_id = prod_obj.id_proveedor.id_proveedor
+                    
+                    if prov_id not in grupos_por_proveedor:
+                        grupos_por_proveedor[prov_id] = []
+                    
+                    # Guardamos el objeto producto en el item para usarlo luego
+                    item['producto_obj'] = prod_obj 
+                    grupos_por_proveedor[prov_id].append(item)
+
+                compras_creadas = 0
+
+                # --- PASO 2: Crear una Compra distinta por cada grupo ---
+                for prov_id, lista_items in grupos_por_proveedor.items():
+                    
+                    # Calcular el total solo de ESTE proveedor
+                    total_grupo = sum(float(i['costo_unitario']) * int(i['cantidad']) for i in lista_items)
+                    
+                    nueva_compra = compra.objects.create(
+                        id_usuario=user,
+                        id_proveedor_id=prov_id, # Asignamos el proveedor detectado
+                        total_compra=total_grupo
+                    )
+
+                    # Crear los detalles para esta compra
+                    for i in lista_items:
+                        prod = i['producto_obj']
+                        cantidad = int(i['cantidad'])
+                        costo = float(i['costo_unitario'])
+
+                        detalle_compra.objects.create(
+                            id_compra=nueva_compra,
+                            id_producto=prod,
+                            cantidad=cantidad,
+                            costo_unitario_compra=costo
+                        )
+
+                        # Actualizar stock y precio costo
+                        prod.stock_actual += cantidad
+                        prod.precio_costo = costo
+                        prod.save()
+                    
+                    compras_creadas += 1
+
+                return Response({
+                    'message': f'Se registraron exitosamente {compras_creadas} compras distintas agrupadas por proveedor.'
+                }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class VentaViewSet(viewsets.ModelViewSet):
     queryset = venta.objects.all()
