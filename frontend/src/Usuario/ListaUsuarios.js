@@ -1,5 +1,5 @@
 import React ,{useEffect, useState} from "react";
-import axios from "axios"
+import axiosInstance from "../utils/axiosInstance";
 import { Link } from "react-router-dom";
 
 
@@ -8,7 +8,7 @@ function ListaUsuarios(){
     useEffect(() => {
         const fetchUsuarios = async () => {
             try {
-                const response = await axios.get('http://127.0.0.1:8000/api/usuarios/');
+                const response = await axiosInstance.get('usuarios/');
                 setUsuarios(response.data);
             } catch (error) {
                 console.log(error);
@@ -38,12 +38,12 @@ function ListaUsuarios(){
                         </thead>
                         <tbody>
                             {usuarios.map((usuario) => (
-                                <tr key={usuario.id_usuario}>
-                                    <td>{usuario.id_usuario}</td>
-                                    <td>{usuario.nombre_usuario}</td>
+                                <tr key={usuario.id}>
+                                    <td>{usuario.id}</td>
+                                    <td>{usuario.username}</td>
                                     <td>{usuario.rol}</td>
-                                    <td> <Link to={`/usuario/${usuario.id_usuario}/delete`} className="btn btn-danger">Eliminar</Link></td> 
-                                    <td> <Link to={`/usuario/${usuario.id_usuario}/change`} className="btn btn-warning">Actualizar</Link></td>
+                                    <td> <Link to={`/usuario/${usuario.id}/delete`} className="btn btn-danger">Eliminar</Link></td> 
+                                    <td> <Link to={`/usuario/${usuario.id}/change`} className="btn btn-warning">Actualizar</Link></td>
                                 </tr>
                             ) ) }
                         </tbody>

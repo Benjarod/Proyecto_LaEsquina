@@ -1,8 +1,8 @@
-import React, {useState, useEffect} from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import axiosInstance from "../utils/axiosInstance";
 import { useParams, useNavigate } from "react-router-dom";
 
-function ActualizarProducto () {
+function ActualizarProducto() {
     const [id_producto, setIdProducto] = useState("");
     const [sku, setSkuProducto] = useState("");
     const [nombre_producto, setNombreProducto] = useState("");
@@ -15,12 +15,20 @@ function ActualizarProducto () {
     const [id_proveedor, setIdProveedorProducto] = useState("");
     const [error, setError] = useState("");
     const [proveedores, setProveedores] = useState([]);
-    const navigate = useNavigate();
-    let {id} = useParams();
+    const [mostrarModal, setMostrarModal] = useState(false);
+    const [nuevoProveedor, setNuevoProveedor] = useState({
+        nombre_proveedor: "",
+        rut: "",
+        contacto: "",
+    });
 
+    const navigate = useNavigate();
+    let { id } = useParams();
+
+    // Carga producto
     const cargarDatosProductos = async () => {
         try {
-            const response = await axios.get(`http://localhost:8000/api/productos/${id}/`);
+            const response = await axiosInstance.get(`productos/${id}/`);
             const producto = response.data;
             setIdProducto(producto.id_producto);
             setSkuProducto(producto.sku);
@@ -31,148 +39,214 @@ function ActualizarProducto () {
             setStockActualProducto(producto.stock_actual);
             setStockMinimoProducto(producto.stock_minimo);
             setImagenProducto(producto.imagen || null);
-            // producto.id_proveedor puede venir como id (number) o como objeto { id_proveedor: .. }
-            if (producto.id_proveedor && typeof producto.id_proveedor === 'object') {
+            if (producto.id_proveedor && typeof producto.id_proveedor === "object") {
                 setIdProveedorProducto(producto.id_proveedor.id_proveedor || producto.id_proveedor.id || "");
             } else {
                 setIdProveedorProducto(producto.id_proveedor || "");
             }
-            
-        } catch (error) {
-            console.error("Error al cargar producto:", error);
+        } catch (err) {
+            console.error("Error al cargar producto:", err);
             setError("Error al cargar los datos del producto");
         }
     };
 
-    const volverAtras = () => {
-        navigate(-1);
-    };
-
-    useEffect(() => {
-        cargarDatosProductos();
-    },[]);
-
-    // Cargar proveedores para mostrar en el select y mostrar el nombre del proveedor asignado
+    // Cargar proveedores
     useEffect(() => {
         const fetchProveedores = async () => {
             try {
-                const resp = await axios.get('http://localhost:8000/api/proveedores/');
+                const resp = await axiosInstance.get("proveedores/");
                 setProveedores(resp.data);
             } catch (err) {
-                console.error('Error cargando proveedores:', err);
+                console.error("Error cargando proveedores:", err);
             }
         };
         fetchProveedores();
     }, []);
 
-    
+    useEffect(() => {
+        cargarDatosProductos();
+    }, []);
 
-    // Actualizar producto
-    const onSubmit = async (e) => {
-      e.preventDefault();
-      try {
-        const formData = new FormData();
-        formData.append("sku", sku);
-        formData.append("nombre_producto", nombre_producto);
-        formData.append("descripcion", descripcion);
-        formData.append("precio_costo", precio_costo);
-        formData.append("precio_venta", precio_venta);
-        formData.append("stock_actual", stock_actual);
-        formData.append("stock_minimo", stock_minimo);
-        formData.append("id_proveedor", id_proveedor);
+    const volverAtras = () => navigate(-1);
 
-        if (imagen instanceof File) {
-        formData.append("imagen", imagen);
-      }
-
-        await axios.patch(`http://localhost:8000/api/productos/${id}/`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
+    // manejar modal y creación rápida de proveedor
+    const handleInputProveedor = (e) => {
+        setNuevoProveedor({
+            ...nuevoProveedor,
+            [e.target.name]: e.target.value,
         });
-
-        navigate("/productos/");
-      } catch (error) {
-        console.error("Error al actualizar:", error);
-        setError(
-          error.response?.data
-            ? "Error: " + JSON.stringify(error.response.data)
-            : "Error al actualizar el producto"
-        );
-      }
     };
 
+    const guardarProveedorRapido = async () => {
+        if (!nuevoProveedor.nombre_proveedor || !nuevoProveedor.rut) {
+            alert("El nombre y el RUT del proveedor son obligatorios");
+            return;
+        }
+        try {
+            const response = await axiosInstance.post("proveedores/", nuevoProveedor);
+            const proveedorCreado = response.data;
+            setProveedores([...proveedores, proveedorCreado]);
+            setIdProveedorProducto(proveedorCreado.id_proveedor);
+            setNuevoProveedor({ nombre_proveedor: "", rut: "", contacto: "" });
+            setMostrarModal(false);
+            alert("Proveedor agregado y seleccionado correctamente.");
+        } catch (err) {
+            console.error("Error al crear proveedor:", err);
+            alert("No se pudo crear el proveedor. Revise los datos.");
+        }
+    };
 
-    return(
-        <div className="container">
-            <h1>Actualizar Producto</h1>
-            <hr></hr>
-            {error && (
-                <div className="alert alert-danger" role="alert">
-                    {error}
-                </div>
-            )}
-            <div className="card">
-                <div className="card-header">Complete los datos para actulizar</div>
-                <div className="card-body">
-                <form onSubmit={onSubmit}>
-                        <div className="form-group">
-                            <label>ID Producto</label>
+    // actualizar producto
+    const onSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const formData = new FormData();
+            formData.append("sku", sku);
+            formData.append("nombre_producto", nombre_producto);
+            formData.append("descripcion", descripcion);
+            formData.append("precio_costo", precio_costo);
+            formData.append("precio_venta", precio_venta);
+            formData.append("stock_actual", stock_actual);
+            formData.append("stock_minimo", stock_minimo);
+            formData.append("id_proveedor", id_proveedor);
+            if (imagen instanceof File) formData.append("imagen", imagen);
+
+            await axiosInstance.patch(`productos/${id}/`, formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            navigate("/productos/");
+        } catch (err) {
+            console.error("Error al actualizar:", err);
+            setError(
+                err.response?.data ? "Error: " + JSON.stringify(err.response.data) : "Error al actualizar el producto"
+            );
+        }
+    };
+
+    return (
+        <div className="container mt-4">
+            <h2>Actualizar Producto</h2>
+            {error && <div className="alert alert-danger">{error}</div>}
+            <form onSubmit={onSubmit} className="mt-3">
+                <div className="row">
+                    {/* Columna Izquierda */}
+                    <div className="col-md-6">
+                        <div className="mb-3">
+                            <label className="form-label">ID Producto</label>
                             <input type="number" className="form-control" value={id_producto} disabled />
-                            <label>SKU</label>
+                        </div>
+                        <div className="mb-3">
+                            <label className="form-label">SKU</label>
                             <input type="text" className="form-control" value={sku} onChange={(e) => setSkuProducto(e.target.value)} required />
-                            <label>Nombre Producto</label>
+                        </div>
+                        <div className="mb-3">
+                            <label className="form-label">Nombre Producto</label>
                             <input type="text" className="form-control" value={nombre_producto} onChange={(e) => setNombreProducto(e.target.value)} required />
-                            <label>Descripción</label>
-                            <input type="text" className="form-control" value={descripcion} onChange={(e) => setDescripcionProducto(e.target.value)} required />
-                            <label>Precio Costo</label>
+                        </div>
+                        <div className="mb-3">
+                            <label className="form-label">Descripción</label>
+                            <textarea className="form-control" rows="3" value={descripcion} onChange={(e) => setDescripcionProducto(e.target.value)} />
+                        </div>
+                    </div>
+
+                    {/* Columna Derecha */}
+                    <div className="col-md-6">
+                        <div className="mb-3">
+                            <label className="form-label">Precio Costo</label>
                             <input type="number" className="form-control" value={precio_costo} onChange={(e) => setPrecioCostoProducto(e.target.value)} required />
-                            <label>Precio Venta</label>
+                        </div>
+                        <div className="mb-3">
+                            <label className="form-label">Precio Venta</label>
                             <input type="number" className="form-control" value={precio_venta} onChange={(e) => setPrecioVentaProducto(e.target.value)} required />
-                            <label>Stock Actual</label>
+                        </div>
+                        <div className="mb-3">
+                            <label className="form-label">Stock Actual</label>
                             <input type="number" className="form-control" value={stock_actual} onChange={(e) => setStockActualProducto(e.target.value)} required />
-                            <label>Stock Mínimo</label>
+                        </div>
+                        <div className="mb-3">
+                            <label className="form-label">Stock Mínimo (Alerta)</label>
                             <input type="number" className="form-control" value={stock_minimo} onChange={(e) => setStockMinimoProducto(e.target.value)} required />
-                            <label>Proveedor</label>
-                            {proveedores.length > 0 ? (
-                                <select className="form-control" value={id_proveedor} onChange={(e) => setIdProveedorProducto(e.target.value)} required>
-                                    <option value="">-- Seleccione proveedor --</option>
+                        </div>
+
+                        {/* SELECCION DE PROVEEDOR CON BOTON DE AGREGAR */}
+                        <div className="mb-3">
+                            <label className="form-label">Proveedor</label>
+                            <div className="input-group">
+                                <select
+                                    className="form-select"
+                                    value={id_proveedor}
+                                    onChange={(e) => setIdProveedorProducto(e.target.value)}
+                                    required
+                                >
+                                    <option value="">Seleccione un proveedor...</option>
                                     {proveedores.map((p) => (
                                         <option key={p.id_proveedor} value={p.id_proveedor}>
-                                            {p.nombre_proveedor} ({p.rut})
+                                            {p.nombre_proveedor} {p.rut ? `(${p.rut})` : ""}
                                         </option>
                                     ))}
                                 </select>
-                            ) : (
-                                <input type="number" className="form-control" value={id_proveedor} onChange={(e) => setIdProveedorProducto(e.target.value)} required />
-                            )}
-                            <label className="mt-3">Imagen</label>
-                            {/* Mostrar imagen actual si existe */}
-                            {imagen && !(imagen instanceof File) && (
-                            <div className="mb-2">
-                                <img
-                                    src={imagen}
-                                    alt=""
-                                    style={{
-                                        width: "120px",
-                                        height: "120px",
-                                        objectFit: "cover",
-                                        borderRadius: "8px",
-                                    }}
-                                />
+                                <button className="btn btn-outline-success" type="button" onClick={() => setMostrarModal(true)} title="Agregar Nuevo Proveedor">
+                                    <i className="bi bi-plus-lg"></i> Nuevo
+                                </button>
                             </div>
-                            )}
-                            <input
-                                type="file"
-                                className="form-control"
-                                accept="image/*"
-                                onChange={(e) => setImagenProducto(e.target.files[0])}
-                            />
-                            <button type="submit" className="btn btn-primary me-2">Actualizar Producto</button>
-                            <button type="button" className="btn btn-secondary" onClick={volverAtras}>Cancelar</button>
                         </div>
-                    </form>
+                    </div>
                 </div>
-            </div>
+
+                <div className="mb-3">
+                    <label className="form-label">Imagen</label>
+                    {/* mostrar imagen actual si existe */}
+                    {imagen && !(imagen instanceof File) && (
+                        <div className="mb-2">
+                            <img
+                                src={imagen}
+                                alt=""
+                                style={{ width: "120px", height: "120px", objectFit: "cover", borderRadius: "8px" }}
+                            />
+                        </div>
+                    )}
+                    <input type="file" className="form-control" accept="image/*" onChange={(e) => setImagenProducto(e.target.files[0])} />
+                </div>
+
+                <button type="submit" className="btn btn-primary mt-3">Actualizar Producto</button>
+                <button type="button" className="btn btn-secondary ms-2 mt-3" onClick={volverAtras}>Cancelar</button>
+            </form>
+
+            {/* Modal para agregar proveedor rápido */}
+            {mostrarModal && (
+                <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header bg-success text-white">
+                                <h5 className="modal-title">Agregar Nuevo Proveedor</h5>
+                                <button type="button" className="btn-close btn-close-white" onClick={() => setMostrarModal(false)}></button>
+                            </div>
+                            <div className="modal-body">
+                                <form>
+                                    <div className="mb-2">
+                                        <label className="form-label">Nombre *</label>
+                                        <input type="text" name="nombre_proveedor" className="form-control" value={nuevoProveedor.nombre_proveedor} onChange={handleInputProveedor} />
+                                    </div>
+                                    <div className="mb-2">
+                                        <label className="form-label">RUT *</label>
+                                        <input type="text" name="rut" className="form-control" value={nuevoProveedor.rut} onChange={handleInputProveedor} />
+                                    </div>
+                                    <div className="mb-2">
+                                        <label className="form-label">Contacto</label>
+                                        <input type="text" name="contacto" className="form-control" value={nuevoProveedor.contacto} onChange={handleInputProveedor} />
+                                    </div>
+                                </form>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setMostrarModal(false)}>Cancelar</button>
+                                <button type="button" className="btn btn-success" onClick={guardarProveedorRapido}>Guardar y Seleccionar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
-    )
+    );
 }
+
 export default ActualizarProducto;

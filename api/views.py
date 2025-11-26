@@ -5,6 +5,10 @@ from .models import proveedor,usuario, producto, compra, venta, detalle_compra, 
 from django.db import transaction
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from rest_framework.permissions import IsAuthenticated
+from .permissions import IsAdmin, IsBodeguero, IsCajero
+
 from django.http import HttpResponse
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.pagesizes import letter
@@ -14,20 +18,28 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_RIGHT
 from io import BytesIO
-from datetime import datetime
+from datetime import datetime,timedelta
+
+from django.db.models import Sum, F, Count
+from django.utils import timezone
+from rest_framework.views import APIView
 
 # Create your views here.
 class ProveedorViewSet(viewsets.ModelViewSet):
     queryset = proveedor.objects.all()
     serializer_class = ProveedorSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
 
 class UsuarioViewSet(viewsets.ModelViewSet):
     queryset = usuario.objects.all()
     serializer_class = UsuarioSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = producto.objects.all()
     serializer_class = ProductoSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero | IsCajero]
+
     @action(detail=False, methods=['get'])
     def buscar(self, request):
         """Buscar productos por SKU o nombre"""
@@ -45,32 +57,100 @@ class ProductoViewSet(viewsets.ModelViewSet):
 class CompraViewSet(viewsets.ModelViewSet):
     queryset = compra.objects.all()
     serializer_class = CompraSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero] 
+
+    @action(detail=False, methods=['post'])
+    def procesar_compra(self, request):
+        try:
+            with transaction.atomic():
+                user = request.user
+                items = request.data.get('items', []) # Solo recibimos items, no proveedor global
+                
+                if not items:
+                    return Response({'error': 'No hay productos en la lista'}, status=status.HTTP_400_BAD_REQUEST)
+
+                # --- PASO 1: Agrupar productos por su ID de Proveedor ---
+                # Estructura final: { id_proveedor_1: [itemA, itemB], id_proveedor_2: [itemC] }
+                grupos_por_proveedor = {}
+                
+                for item in items:
+                    prod_id = item['id_producto']
+                    try:
+                        prod_obj = producto.objects.get(id_producto=prod_id)
+                    except producto.DoesNotExist:
+                        raise Exception(f"Producto ID {prod_id} no encontrado")
+                    
+                    # Obtenemos el proveedor asociado a este producto
+                    prov_id = prod_obj.id_proveedor.id_proveedor
+                    
+                    if prov_id not in grupos_por_proveedor:
+                        grupos_por_proveedor[prov_id] = []
+                    
+                    # Guardamos el objeto producto en el item para usarlo luego
+                    item['producto_obj'] = prod_obj 
+                    grupos_por_proveedor[prov_id].append(item)
+
+                compras_creadas = 0
+
+                # --- PASO 2: Crear una Compra distinta por cada grupo ---
+                for prov_id, lista_items in grupos_por_proveedor.items():
+                    
+                    # Calcular el total solo de ESTE proveedor
+                    total_grupo = sum(float(i['costo_unitario']) * int(i['cantidad']) for i in lista_items)
+                    
+                    nueva_compra = compra.objects.create(
+                        id_usuario=user,
+                        id_proveedor_id=prov_id, # Asignamos el proveedor detectado
+                        total_compra=total_grupo
+                    )
+
+                    # Crear los detalles para esta compra
+                    for i in lista_items:
+                        prod = i['producto_obj']
+                        cantidad = int(i['cantidad'])
+                        costo = float(i['costo_unitario'])
+
+                        detalle_compra.objects.create(
+                            id_compra=nueva_compra,
+                            id_producto=prod,
+                            cantidad=cantidad,
+                            costo_unitario_compra=costo
+                        )
+
+                        # Actualizar stock y precio costo
+                        prod.stock_actual += cantidad
+                        prod.precio_costo = costo
+                        prod.save()
+                    
+                    compras_creadas += 1
+
+                return Response({
+                    'message': f'Se registraron exitosamente {compras_creadas} compras distintas agrupadas por proveedor.'
+                }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class VentaViewSet(viewsets.ModelViewSet):
     queryset = venta.objects.all()
     serializer_class = VentaSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsCajero]
+
     
     @action(detail=False, methods=['post'])
     def procesar_venta(self, request):
         try:
             with transaction.atomic():
-                id_usuario = request.data.get('id_usuario')
+                user = request.user
                 metodo_pago = request.data.get('metodo_pago', 'Efectivo')
                 items = request.data.get('items', [])
                 
-                if not id_usuario or not items:
+                if not items:
                     return Response(
                         {'error': 'Faltan datos requeridos'},
                         status=status.HTTP_400_BAD_REQUEST
-                    )
-                
-                # Obtener usuario
-                try:
-                    user = usuario.objects.get(id_usuario=id_usuario)
-                except usuario.DoesNotExist:
-                    return Response(
-                        {'error': 'Usuario no encontrado'},
-                        status=status.HTTP_404_NOT_FOUND
                     )
                 
                 # Calcular total y validar stock
@@ -185,7 +265,7 @@ class VentaViewSet(viewsets.ModelViewSet):
             info_data = [
                 f"<b>Boleta N°:</b> {venta_obj.id_venta}",
                 f"<b>Fecha:</b> {fecha_formateada}",
-                f"<b>Cajero:</b> {venta_obj.id_usuario.nombre_usuario}",
+                f"<b>Cajero:</b> {venta_obj.id_usuario.username}",
                 f"<b>Método de Pago:</b> {venta_obj.metodo_pago}",
             ]
             
@@ -280,12 +360,51 @@ class VentaViewSet(viewsets.ModelViewSet):
 class DetalleCompraViewSet(viewsets.ModelViewSet):
     queryset = detalle_compra.objects.all()
     serializer_class = DetalleCompraSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
 
 class DetalleVentaViewSet(viewsets.ModelViewSet):
     queryset = detalle_venta.objects.all()
     serializer_class = DetalleVentaSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsCajero]
 
 class AjusteStockViewSet(viewsets.ModelViewSet):
     queryset = ajuste_stock.objects.all()
     serializer_class = AjusteStockSerializer
+    permission_classes = [IsAuthenticated, IsAdmin | IsBodeguero]
 
+class DashboardView(APIView):
+    permission_classes = [IsAuthenticated, IsAdmin]
+
+    def get(self, request):
+        hoy = timezone.now()
+        inicio_mes = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        # 1. Ingresos totales del mes actual
+        ingresos_mes = venta.objects.filter(fecha_hora__gte=inicio_mes).aggregate(total=Sum('total_venta'))['total'] or 0
+        
+        # 2. Cantidad de ventas hoy
+        inicio_dia = hoy.replace(hour=0, minute=0, second=0, microsecond=0)
+        ventas_hoy = venta.objects.filter(fecha_hora__gte=inicio_dia).count()
+
+        ingresos_hoy = venta.objects.filter(fecha_hora__gte=inicio_dia).aggregate(total=Sum('total_venta'))['total'] or 0
+
+        # 3. Productos más vendidos (Top 5 histórico)
+        # Usamos detalle_venta para sumar las cantidades por producto
+        productos_mas_vendidos = detalle_venta.objects.values('id_producto__nombre_producto') \
+            .annotate(total_vendido=Sum('cantidad')) \
+            .order_by('-total_vendido')[:5]
+
+        # 4. Productos con stock crítico (Stock actual <= Stock mínimo)
+        productos_bajo_stock = producto.objects.filter(stock_actual__lte=F('stock_minimo')).values(
+            'nombre_producto', 'stock_actual', 'stock_minimo'
+        )
+
+        data = {
+            'ingresos_mes': ingresos_mes,
+            'ventas_hoy': ventas_hoy,
+            'productos_top': list(productos_mas_vendidos),
+            'alertas_stock': list(productos_bajo_stock),
+            'ingresos_hoy': ingresos_hoy
+        }
+
+        return Response(data)

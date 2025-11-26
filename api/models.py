@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 import os
 
 # Create your models here.
@@ -10,10 +11,8 @@ class proveedor(models.Model):
     def __str__(self):
         return f"{self.nombre_proveedor} ({self.rut})"
 
-class usuario(models.Model):
-    id_usuario = models.AutoField(primary_key=True)
-    nombre_usuario = models.CharField(max_length=100)
-    password = models.CharField(max_length=100)
+class usuario(AbstractUser):
+    # AbstractUser ya tiene: id (PK), username, password, email, first_name, last_name
     ### Elecciones para campo 'rol'
     class Rol(models.TextChoices):
         ADMINISTRADOR = 'Admin'
@@ -22,9 +21,10 @@ class usuario(models.Model):
     rol = models.CharField(
         max_length=30,
         choices=Rol.choices,
+        default='Cajero',
     )
     def __str__(self):
-        return f"{self.nombre_usuario} ({self.rol})"
+        return f"{self.username} ({self.rol})"
 
 class producto(models.Model):
     id_producto = models.AutoField(primary_key=True)

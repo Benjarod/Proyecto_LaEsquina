@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axiosInstance";
 import { useNavigate } from "react-router-dom";
 
 function CrearProveedor() {
@@ -17,7 +17,7 @@ function CrearProveedor() {
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('http://localhost:8000/api/proveedores/', {
+            await axiosInstance.post('proveedores/', {
                 id_proveedor,
                 rut,
                 nombre_proveedor,

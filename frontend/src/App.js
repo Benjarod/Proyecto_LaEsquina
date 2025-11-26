@@ -1,7 +1,15 @@
-import {BrowserRouter as Router, Route, Routes} from 'react-router-dom';
+// src/App.js
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext'; // Importar AuthProvider
+import { Navigate } from 'react-router-dom';
+
 import TopBar from './components/TopBar';
 import Home from './components/Home';
+import ProtectedRoute from './components/ProtectedRoute'; // Importar ProtectedRoute
+import LoginPage from './Login/LoginPage'; // Importar LoginPage
+import Dashboard from './components/Dashboard';
 
+// ... (imports de las otras vistas)
 import ListaUsuarios from './Usuario/ListaUsuarios';
 import CrearUsuario from './Usuario/CrearUsuario';
 import EliminarUsuario from './Usuario/EliminarUsuario';
@@ -17,39 +25,77 @@ import CrearProducto from './Productos/CrearProducto';
 import ActualizarProducto from './Productos/ActualizarProducto';
 import EliminarProducto from './Productos/EliminarProducto';
 
-import ListaVentas from './Ventas/ListaVentas';
+import ListaCompras from './Compras/ListaCompras';
+import IngresarCompra from './Compras/IngresarCompra';
 
+import ListaVentas from './Ventas/ListaVentas';
 import Caja from './Caja/caja';
 
+// Roles
+const ROLES = {
+  Admin: 'Admin',
+  Bodeguero: 'Bodeguero',
+  Cajero: 'Cajero'
+}
+
+// Mover el Router a index.js y envolver App con AuthProvider
 function App() {
   return (
     <Router>
-      <div>
-        <TopBar/>
-        <Routes>
-          <Route path="/" element={<Home/>}/>
-
-          <Route path="/usuario/" element={<ListaUsuarios/>}/>
-          <Route path="/usuarios/add" element={<CrearUsuario/>} />
-          <Route path="/usuario/:id/delete" element={<EliminarUsuario/>} />
-          <Route path="/usuario/:id/change" element={<ActualizarUsuario/>} />
-
-          <Route path='/proveedores/' element={<ListaProveedores/>}/>
-          <Route path="/proveedor/add" element={<CrearProveedor/>} />
-          <Route path="/proveedor/:id/delete" element={<EliminarProveedor/>} />
-          <Route path="/proveedor/:id/change" element={<ActualizarProveedor/>} />
-
-          <Route path='/productos/' element={<ListaProductos/>}/>
-          <Route path="/producto/add" element={<CrearProducto/>} />
-          <Route path="/producto/:id/delete" element={<EliminarProducto/>} />
-          <Route path="/producto/:id/change" element={<ActualizarProducto/>} />
-
-          <Route path='/ventas/' element={<ListaVentas/>}/>
-
-          <Route path="/caja/" element={<Caja/>} />
-        </Routes>
-      </div>
+      <AuthProvider> {/* Envolver todo con AuthProvider */}
+        <AppContent />
+      </AuthProvider>
     </Router>
+  );
+}
+
+// Creamos un componente interno para poder usar el hook useAuth
+function AppContent() {
+  const { user } = useAuth(); // Obtener el usuario del contexto
+
+  return (
+    <div>
+      {/* Solo mostrar TopBar si el usuario está logueado */}
+      {user && <TopBar />}
+      
+      <Routes>
+        {/* Ruta de Login (Pública) */}
+        <Route path="/login" element={<LoginPage />} />
+
+        {/* Rutas Protegidas */}
+        <Route 
+          path="/" 
+          element={<ProtectedRoute element={<Home />} />} 
+        />
+
+        {/* --- Rutas de Admin --- */}
+        <Route path="/usuario/" element={<ProtectedRoute element={<ListaUsuarios />} roles={[ROLES.Admin]} />} />
+        <Route path="/usuarios/add" element={<ProtectedRoute element={<CrearUsuario />} roles={[ROLES.Admin]} />} />
+        <Route path="/usuario/:id/delete" element={<ProtectedRoute element={<EliminarUsuario />} roles={[ROLES.Admin]} />} />
+        <Route path="/usuario/:id/change" element={<ProtectedRoute element={<ActualizarUsuario />} roles={[ROLES.Admin]} />} />
+        
+        <Route path='/proveedores/' element={<ProtectedRoute element={<ListaProveedores />} roles={[ROLES.Admin]} />} />
+        <Route path="/proveedor/add" element={<ProtectedRoute element={<CrearProveedor />} roles={[ROLES.Admin]} />} />
+        <Route path="/proveedor/:id/delete" element={<ProtectedRoute element={<EliminarProveedor />} roles={[ROLES.Admin]} />} />
+        <Route path="/proveedor/:id/change" element={<ProtectedRoute element={<ActualizarProveedor />} roles={[ROLES.Admin]} />} />
+        <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} roles={[ROLES.Admin]} />} />
+
+        {/* --- Rutas de Bodeguero --- */}
+        <Route path='/productos/' element={<ProtectedRoute element={<ListaProductos />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
+        <Route path="/producto/add" element={<ProtectedRoute element={<CrearProducto />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
+        <Route path="/producto/:id/delete" element={<ProtectedRoute element={<EliminarProducto />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
+        <Route path="/producto/:id/change" element={<ProtectedRoute element={<ActualizarProducto />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
+        <Route path="/ingresar-compra" element={<ProtectedRoute element={<IngresarCompra />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
+        <Route path="/compras" element={<ProtectedRoute element={<ListaCompras />} roles={[ROLES.Admin, ROLES.Bodeguero]} />} />
+
+        {/* --- Rutas de Cajero --- */}
+        <Route path='/ventas/' element={<ProtectedRoute element={<ListaVentas />} roles={[ROLES.Admin, ROLES.Cajero]} />} />
+        <Route path="/caja/" element={<ProtectedRoute element={<Caja />} roles={[ROLES.Admin, ROLES.Cajero]} />} />
+
+        {/* Ruta "Catch-all" o 404 (opcional) */}
+        <Route path="*" element={user ? <Navigate to="/" /> : <Navigate to="/login" />} />
+      </Routes>
+    </div>
   );
 }
 

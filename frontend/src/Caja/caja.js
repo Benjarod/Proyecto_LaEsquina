@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../utils/axiosInstance";
+import { useAuth } from "../context/AuthContext";
 
 function Caja() {
     const [productos, setProductos] = useState([]);
@@ -15,6 +16,7 @@ function Caja() {
     const [mostrarCatalogo, setMostrarCatalogo] = useState(false);
     const [mostrarModalPago, setMostrarModalPago] = useState(false);
     const [metodoPago, setMetodoPago] = useState("");
+    const { user } = useAuth();
     
     // Estados para paginación
     const [paginaActual, setPaginaActual] = useState(1);
@@ -22,24 +24,11 @@ function Caja() {
     
     const navigate = useNavigate();
 
-    // Cargar usuarios al montar el componente
-    useEffect(() => {
-        const fetchUsuarios = async () => {
-            try {
-                const response = await axios.get('http://localhost:8000/api/usuarios/');
-                setUsuarios(response.data.filter(u => u.rol === 'Cajero' || u.rol === 'Admin'));
-            } catch (error) {
-                console.error("Error al cargar usuarios:", error);
-            }
-        };
-        fetchUsuarios();
-    }, []);
-
     // Cargar todos los productos para el catálogo
     useEffect(() => {
         const fetchTodosProductos = async () => {
             try {
-                const response = await axios.get('http://localhost:8000/api/productos/');
+                const response = await axiosInstance.get('productos/');
                 setTodosProductos(response.data);
             } catch (error) {
                 console.error("Error al cargar productos:", error);
@@ -56,8 +45,8 @@ function Caja() {
         }
         
         try {
-            const response = await axios.get(
-                `http://localhost:8000/api/productos/buscar/?q=${busqueda}`
+            const response = await axiosInstance.get(
+                `productos/buscar/?q=${busqueda}`
             );
             setProductos(response.data);
         } catch (error) {
@@ -131,10 +120,6 @@ function Caja() {
 
     // Abrir modal de pago
     const abrirModalPago = () => {
-        if (!idUsuario) {
-            setError("Debe seleccionar un usuario");
-            return;
-        }
 
         if (carrito.length === 0) {
             setError("El carrito está vacío");
@@ -161,10 +146,9 @@ function Caja() {
                 cantidad: item.cantidad
             }));
 
-            const response = await axios.post(
-                'http://localhost:8000/api/ventas/procesar_venta/',
+            const response = await axiosInstance.post(
+                'ventas/procesar_venta/',
                 {
-                    id_usuario: idUsuario,
                     metodo_pago: metodoPago,
                     items: items
                 }
@@ -173,8 +157,8 @@ function Caja() {
             const idVenta = response.data.id_venta;
 
             // Descargar boleta PDF
-            const pdfResponse = await axios.get(
-                `http://localhost:8000/api/ventas/${idVenta}/generar_boleta/`,
+            const pdfResponse = await axiosInstance.get(
+                `ventas/${idVenta}/generar_boleta/`,
                 { responseType: 'blob' }
             );
 
@@ -194,7 +178,7 @@ function Caja() {
             setMetodoPago("");
             
             // Recargar productos para actualizar stock
-            const respProductos = await axios.get('http://localhost:8000/api/productos/');
+            const respProductos = await axiosInstance.get('productos/');
             setTodosProductos(respProductos.data);
             
             setTimeout(() => {
@@ -315,19 +299,9 @@ function Caja() {
                         </div>
                         <div className="card-body">
                             <div className="mb-3">
-                                <label className="form-label">Usuario (Cajero)</label>
-                                <select 
-                                    className="form-select" 
-                                    value={idUsuario} 
-                                    onChange={(e) => setIdUsuario(e.target.value)}
-                                >
-                                    <option value="">-- Seleccione cajero --</option>
-                                    {usuarios.map(u => (
-                                        <option key={u.id_usuario} value={u.id_usuario}>
-                                            {u.nombre_usuario} ({u.rol})
-                                        </option>
-                                    ))}
-                                </select>
+                                <span className="form-control-plaintext">
+                                    <strong>Cajero:</strong> {user.username}
+                                </span>
                             </div>
 
                             <div className="input-group mb-3">

@@ -1,5 +1,5 @@
 import React ,{useEffect, useState} from "react";
-import axios from "axios"
+import axiosInstance from "../utils/axiosInstance";
 import { Link } from "react-router-dom";
 
 
@@ -8,7 +8,7 @@ function ListaProveedores(){
     useEffect(() => {
         const fetchProveedores = async () => {
             try {
-                const response = await axios.get('http://127.0.0.1:8000/api/proveedores/');
+                const response = await axiosInstance.get('proveedores/');
                 setProveedores(response.data);
             } catch (error) {
                 console.log(error);
