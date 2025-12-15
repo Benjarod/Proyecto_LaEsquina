@@ -88,8 +88,11 @@ function ActualizarUsuario () {
                             </select>
                             <label>Nueva Contraseña</label>
                             <input type="password" className="form-control" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Dejar en blanco para no cambiar" />
-                            <button type="submit" className="btn btn-primary me-2">Actualizar Usuario</button>
-                            <button type="button" className="btn btn-secondary" onClick={volverAtras}>Cancelar</button>
+                            <div className="mt-4">
+                                <button type="submit" className="btn btn-primary me-2">Actualizar Usuario</button>
+                                <button type="button" className="btn btn-secondary" onClick={volverAtras}>Cancelar</button>
+                            </div>
+                            
                         </div>
                     </form>
                 </div>

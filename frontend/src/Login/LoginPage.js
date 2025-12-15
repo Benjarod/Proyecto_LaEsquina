@@ -18,13 +18,12 @@ function LoginPage() {
             setError("Usuario o contraseña incorrectos.");
         }
     };
-
     return (
-        <div className="container mt-5">
-            <div className="row justify-content-center">
-                <div className="col-md-6 col-lg-4">
+        <div className="min-vh-100 d-flex align-items-center justify-content-center">
+            <div className="w-100 px-3" style={{ maxWidth: 420 }}>
+                <div className="card shadow-sm">
                     <div className="card">
-                        <div className="card-body">
+                        <div className="card-body p-4">
                             <h3 className="card-title text-center mb-4">Iniciar Sesión</h3>
                             {error && <div className="alert alert-danger">{error}</div>}
                             <form onSubmit={handleSubmit}>
