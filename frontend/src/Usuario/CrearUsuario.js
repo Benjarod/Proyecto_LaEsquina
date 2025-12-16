@@ -8,10 +8,28 @@ function CrearUsuario() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
+    const [mostrarModalCancelar, setMostrarModalCancelar] = useState(false);
 
     const volverAtras = () => {
         navigate(-1);
     };
+
+    // --- LOGICA MODAL PARA CANCELAR ---
+    const handleCancelarClick = () => {
+        // En lugar de salir directamente, mostramos el modal
+        setMostrarModalCancelar(true);
+    };
+
+    const confirmarSalida = () => {
+        // Aquí sí navegamos hacia atrás
+        setMostrarModalCancelar(false);
+        navigate(-1);
+    };
+
+    const cerrarModalCancelar = () => {
+        setMostrarModalCancelar(false);
+    };
+
 
     const onSubmit = async (e) => {
         e.preventDefault();
@@ -68,11 +86,36 @@ function CrearUsuario() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
-
-                            <button type="submit" className="btn btn-primary me-2">Crear Usuario</button>
-                            <button type="button" className="btn btn-secondary" onClick={volverAtras}>Cancelar</button>
+                            <div className="mt-4">
+                                <button type="submit" className="btn btn-primary me-2">Crear Usuario</button>
+                                <button type="button" className="btn btn-secondary" onClick={handleCancelarClick}>Cancelar</button>
+                            </div>
                         </div>
                     </form>
+                    {/* MODAL DE CONFIRMACIÓN DE CANCELAR */}
+                    {mostrarModalCancelar && (
+                        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+                            <div className="modal-dialog modal-dialog-centered">
+                                <div className="modal-content">
+                                    <div className="modal-header bg-warning">
+                                        <h5 className="modal-title">¿Seguro que quieres salir?</h5>
+                                        <button type="button" className="btn-close" onClick={cerrarModalCancelar}></button>
+                                    </div>
+                                    <div className="modal-body">
+                                        <p>Si sales ahora, se perderán los datos ingresados en el formulario.</p>
+                                    </div>
+                                    <div className="modal-footer">
+                                        <button type="button" className="btn btn-secondary" onClick={cerrarModalCancelar}>
+                                            No, continuar editando
+                                        </button>
+                                        <button type="button" className="btn btn-danger" onClick={confirmarSalida}>
+                                            Sí, salir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

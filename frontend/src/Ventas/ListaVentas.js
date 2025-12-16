@@ -13,7 +13,7 @@ function ListaVentas(){
             try {
                 const response = await axiosInstance.get('ventas/');
                 // Ordenar por fecha descendente (las más nuevas primero)
-                const ventasOrdenadas = response.data.sort((a, b) => new Date(b.fecha_hora) - Date(a.fecha_hora))
+                const ventasOrdenadas = response.data.sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
                 setVentas(ventasOrdenadas);
             } catch (error) {
                 console.log("Error cargando ventas",error);

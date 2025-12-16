@@ -17,7 +17,7 @@ function CrearProducto() {
     const [error, setError] = useState("");
     const [proveedores, setProveedores] = useState([]);
 
-
+    const [mostrarModalCancelar, setMostrarModalCancelar] = useState(false);
     const [mostrarModal, setMostrarModal] = useState(false);
     const [nuevoProveedor, setNuevoProveedor] = useState({
         nombre_proveedor: '',
@@ -76,7 +76,21 @@ function CrearProducto() {
     };
 
 
+    // --- LOGICA MODIFICADA PARA CANCELAR ---
+    const handleCancelarClick = () => {
+        // En lugar de salir directamente, mostramos el modal
+        setMostrarModalCancelar(true);
+    };
 
+    const confirmarSalida = () => {
+        // Aquí sí navegamos hacia atrás
+        setMostrarModalCancelar(false);
+        navigate(-1);
+    };
+
+    const cerrarModalCancelar = () => {
+        setMostrarModalCancelar(false);
+    };
 
 
     // modal para crear un proveedor
@@ -190,7 +204,7 @@ function CrearProducto() {
                 </div>
 
                 <button type="submit" className="btn btn-primary mt-3">Guardar Producto</button>
-                <button type="button" className="btn btn-secondary ms-2 mt-3" onClick={volverAtras}>Cancelar</button>
+                <button type="button" className="btn btn-secondary ms-2 mt-3" onClick={handleCancelarClick}>Cancelar</button>
             </form>
 
             {/* --- MODAL PARA AGREGAR PROVEEDOR RAPIDO --- */}
@@ -221,6 +235,30 @@ function CrearProducto() {
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setMostrarModal(false)}>Cancelar</button>
                                 <button type="button" className="btn btn-success" onClick={guardarProveedorRapido}>Guardar y Seleccionar</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* MODAL DE CONFIRMACIÓN DE CANCELAR */}
+            {mostrarModalCancelar && (
+                <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1060 }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content">
+                            <div className="modal-header bg-warning">
+                                <h5 className="modal-title">¿Seguro que quieres salir?</h5>
+                                <button type="button" className="btn-close" onClick={cerrarModalCancelar}></button>
+                            </div>
+                            <div className="modal-body">
+                                <p>Si sales ahora, se perderán los datos ingresados en el formulario.</p>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={cerrarModalCancelar}>
+                                    No, continuar editando
+                                </button>
+                                <button type="button" className="btn btn-danger" onClick={confirmarSalida}>
+                                    Sí, salir
+                                </button>
                             </div>
                         </div>
                     </div>
